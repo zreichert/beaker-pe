@@ -1,5 +1,5 @@
 require 'simplecov'
-require 'beaker-template'
+require 'beaker-pe'
 require 'helpers'
 
 require 'rspec/its'

@@ -1,12 +1,25 @@
+require 'stringify-hash'
+require 'beaker-pe/version'
+require 'beaker-pe/install/pe_utils'
+require 'beaker-pe/options/pe_version_scraper'
+
 module Beaker
   module DSL
-    module Helpers
-      module Template
-        require 'stringify-hash'
-        # include your modules from the beaker-template folder. Example below:
-        require 'beaker-template/helpers'
-        require 'beaker-template/version'
-      end
+    module PE
+      include Beaker::DSL::InstallUtils::PEUtils
+      include Beaker::Options::PEVersionScraper
     end
   end
 end
+
+
+# This is commented out because Beaker is going to include this
+# library itself until version 3.0.
+# # Boilerplate DSL inclusion mechanism:
+# # First we register our module with the Beaker DSL
+# Beaker::DSL.register( Beaker::DSL::PE )
+# # Then we have to re-include our amended DSL in the TestCase,
+# # because in general, the DSL is included in TestCase far
+# # before test files are executed, so our amendments wouldn't
+# # come through otherwise
+# include Beaker::DSL
