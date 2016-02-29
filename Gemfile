@@ -21,6 +21,10 @@ group :acceptance_testing do
   gem "beaker", *location_for(ENV['BEAKER_VERSION'] || '~> 2.0')
 end
 
+if ENV['GEM_SOURCE'] =~ /rubygems\.delivery\.puppetlabs\.net/
+  gem "scooter", *location_for(ENV['SCOOTER_VERSION'] || '~> 2.0')
+end
+
 
 if File.exists? "#{__FILE__}.local"
   eval(File.read("#{__FILE__}.local"), binding)
