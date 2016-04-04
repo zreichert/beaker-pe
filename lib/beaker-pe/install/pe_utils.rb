@@ -473,7 +473,15 @@ module Beaker
 
             # Now that all hosts are in the dashbaord, run puppet one more
             # time to configure mcollective
-            on install_hosts, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+            install_hosts.each do |host|
+              on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+              # To work around PE-14318 if we just ran puppet agent on the
+              # database node we will need to wait until puppetdb is up and
+              # running before continuing
+              if host == database
+                sleep_until_puppetdb_started(database)
+              end
+            end
           end
         end
 
