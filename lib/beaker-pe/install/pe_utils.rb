@@ -2,6 +2,7 @@
     require "beaker/dsl/install_utils/#{lib}"
 end
 require "beaker-answers"
+require "timeout"
 module Beaker
   module DSL
     module InstallUtils
@@ -443,17 +444,20 @@ module Beaker
             # Wait for PuppetDB to be totally up and running (post 3.0 version of pe only)
             sleep_until_puppetdb_started(database) unless pre30database
 
-            # Run the agent once to ensure everything is in the dashboard
-            install_hosts.each do |host|
-              on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+            step "First puppet agent run" do
+              # Run the agent once to ensure everything is in the dashboard
+              install_hosts.each do |host|
+                on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
 
-              # Workaround for PE-1105 when deploying 3.0.0
-              # The installer did not respect our database host answers in 3.0.0,
-              # and would cause puppetdb to be bounced by the agent run. By sleeping
-              # again here, we ensure that if that bounce happens during an upgrade
-              # test we won't fail early in the install process.
-              if host['pe_ver'] == '3.0.0' and host == database
-                sleep_until_puppetdb_started(database)
+                # Workaround for PE-1105 when deploying 3.0.0
+                # The installer did not respect our database host answers in 3.0.0,
+                # and would cause puppetdb to be bounced by the agent run. By sleeping
+                # again here, we ensure that if that bounce happens during an upgrade
+                # test we won't fail early in the install process.
+                if host == database && ! pre30database
+                  sleep_until_puppetdb_started(database)
+                  check_puppetdb_status_endpoint(database)
+                end
               end
             end
 
@@ -471,15 +475,18 @@ module Beaker
               on dashboard, "/opt/puppet/bin/rake -sf /opt/puppet/share/puppet-dashboard/Rakefile #{task} RAILS_ENV=production"
             end
 
-            # Now that all hosts are in the dashbaord, run puppet one more
-            # time to configure mcollective
-            install_hosts.each do |host|
-              on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
-              # To work around PE-14318 if we just ran puppet agent on the
-              # database node we will need to wait until puppetdb is up and
-              # running before continuing
-              if host == database
-                sleep_until_puppetdb_started(database)
+            step "Final puppet agent run" do
+              # Now that all hosts are in the dashbaord, run puppet one more
+              # time to configure mcollective
+              install_hosts.each do |host|
+                on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+                # To work around PE-14318 if we just ran puppet agent on the
+                # database node we will need to wait until puppetdb is up and
+                # running before continuing
+                if host == database && ! pre30database
+                  sleep_until_puppetdb_started(database)
+                  check_puppetdb_status_endpoint(database)
+                end
               end
             end
           end
@@ -538,6 +545,22 @@ module Beaker
         #@see #install_pe_on
         def install_pe
           install_pe_on(hosts, options)
+        end
+
+        def check_puppetdb_status_endpoint(host)
+          if version_is_less(host['pe_ver'], '2016.1.0')
+            return true
+          end
+          Timeout.timeout(60) do
+            match = nil
+            while not match
+              output = on(host, "curl -s http://localhost:8080/pdb/meta/v1/version", :accept_all_exit_codes => true)
+              match = output.stdout =~ /version.*\d+\.\d+\.\d+/
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          fail_test "PuppetDB took too long to start"
         end
 
         #Install PE based upon host configuration and options
