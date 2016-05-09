@@ -10,7 +10,11 @@ class ClassMixedWithDSLInstallUtils
   include Beaker::DSL::Patterns
   include Beaker::DSL::PE
 
-  attr_accessor :hosts
+  attr_accessor :hosts, :metadata
+
+  def initialize
+    @metadata = {}
+  end
 
   # Because some the methods now actually call out to the `step` method, we need to
   # mock out `metadata` that is initialized in a test case.
@@ -399,8 +403,7 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('3.0', '3.0').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('3.0', '3.99').and_return( true )
       allow( subject ).to receive( :version_is_less ).with('3.99', '3.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '2016.1.0').and_return( false )
+      allow( subject ).to receive( :version_is_less ).with('3.0', '2016.1.0').and_return( true )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -438,7 +441,7 @@ describe ClassMixedWithDSLInstallUtils do
       expect( subject ).to receive( :stop_agent_on ).with( hosts[3] ).once
       # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
-      # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
+      #run each puppet agent (also captures the final run below)
       expect( subject ).to receive( :on ).with( hosts[0], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       expect( subject ).to receive( :on ).with( hosts[1], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       expect( subject ).to receive( :on ).with( hosts[2], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
@@ -446,6 +449,9 @@ describe ClassMixedWithDSLInstallUtils do
       #run rake task on dashboard
 
       expect( subject ).to receive( :on ).with( hosts[0], /\/opt\/puppet\/bin\/rake -sf \/opt\/puppet\/share\/puppet-dashboard\/Rakefile .* RAILS_ENV=production/ ).once
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # This is captured above (run each puppet agent)
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -510,10 +516,9 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.4').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -540,6 +545,9 @@ describe ClassMixedWithDSLInstallUtils do
       end
       # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # tested above in the hosts loop ^^
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -573,9 +581,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
       allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
@@ -602,6 +609,9 @@ describe ClassMixedWithDSLInstallUtils do
       end
       #  We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # tested above in the hosts loop ^^
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -633,10 +643,9 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
       allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
