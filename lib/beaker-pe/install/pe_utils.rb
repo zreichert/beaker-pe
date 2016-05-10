@@ -22,6 +22,9 @@ module Beaker
         include PuppetUtils
         include WindowsUtils
 
+        # Version of PE when we switched from legacy installer to MEEP.
+        MEEP_CUTOVER_VERSION = '2016.2.0'
+
         # @!macro [new] common_opts
         #   @param [Hash{Symbol=>String}] opts Options to alter execution.
         #   @option opts [Boolean] :silent (false) Do not produce log output
@@ -497,6 +500,17 @@ module Beaker
           end
         end
 
+        # True if version is greater than or equal to 2016.2.0 and the
+        # INSTALLER_TYPE environment variable is 'meep'.
+        #
+        # This will be switched to be true if >= 2016.2.0 and INSTALLER_TYPE !=
+        # 'legacy' once meep is default.
+        #
+        # And then to just >= 2016.2.0 for cutover.
+        def use_meep?(version)
+          !version_is_less(version, MEEP_CUTOVER_VERSION) && ENV['INSTALLER_TYPE'] == 'meep'
+        end
+
         # Set installer options on the passed *host* according to current
         # version and external INSTALLER_TYPE setting.
         #
@@ -508,10 +522,17 @@ module Beaker
         # @param [Beaker::Host] host The host object to configure
         # @return [Beaker::Host] The same host object passed in
         def prepare_host_installer_options(host)
-          conf_file = "#{host['working_dir']}/answers"
-          host['pe_installer_conf_file'] = conf_file
-          host['pe_installer_conf_setting'] = "-a #{conf_file}"
-          host['pe_installer_type'] = 'legacy'
+          if use_meep?(host['pe_ver'])
+            conf_file = "#{host['working_dir']}/pe.conf"
+            host['pe_installer_conf_file'] = conf_file
+            host['pe_installer_conf_setting'] = "-c #{conf_file}"
+            host['pe_installer_type'] = 'meep'
+          else
+            conf_file = "#{host['working_dir']}/answers"
+            host['pe_installer_conf_file'] = conf_file
+            host['pe_installer_conf_setting'] = "-a #{conf_file}"
+            host['pe_installer_type'] = 'legacy'
+          end
           host
         end
 

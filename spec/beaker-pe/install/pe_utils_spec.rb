@@ -254,6 +254,79 @@ describe ClassMixedWithDSLInstallUtils do
 
   end
 
+  describe 'prepare_host_installer_options' do
+    let(:legacy_settings) do
+      {
+        :pe_installer_conf_file => '/tmp/answers',
+        :pe_installer_conf_setting => '-a /tmp/answers',
+        :pe_installer_type => 'legacy',
+      }
+    end
+    let(:meep_settings) do
+      {
+        :pe_installer_conf_file => '/tmp/pe.conf',
+        :pe_installer_conf_setting => '-c /tmp/pe.conf',
+        :pe_installer_type => 'meep',
+      }
+    end
+    let(:installer_type) { nil }
+    let(:host) { unixhost }
+
+    before(:each) do
+      ENV['INSTALLER_TYPE'] = installer_type
+      host['pe_ver'] = pe_ver
+      subject.prepare_host_installer_options(host)
+    end
+
+    after(:each) do
+      ENV.delete('INSTALLER_TYPE')
+    end
+
+    def slice_installer_options(host)
+      host.select { |k,v| [ :pe_installer_conf_file, :pe_installer_conf_setting, :pe_installer_type].include?(k) }
+    end
+
+    context 'when version < 2016.2.0' do
+      let(:pe_ver) { '3.8.5' }
+
+      it 'sets legacy settings' do
+        expect(slice_installer_options(host)).to eq(legacy_settings)
+      end
+
+      context 'and ENV["INSTALLER"]=="meep"' do
+        let(:installer_type) { 'meep' }
+
+        it 'still sets legacy settings' do
+          expect(slice_installer_options(host)).to eq(legacy_settings)
+        end
+      end
+    end
+
+    context 'when version >= 2016.2.0' do
+      let (:pe_ver) { '2016.2.0' }
+
+      context 'and ENV["INSTALLER_TYPE"]=="legacy"' do
+        let(:installer_type) { 'legacy' }
+
+        it 'sets legacy settings' do
+          expect(slice_installer_options(host)).to eq(legacy_settings)
+        end
+      end
+
+      context 'and ENV["INSTALLER_TYPE"]=="meep"' do
+        let(:installer_type) { 'meep' }
+
+        it 'sets meep settings' do
+          expect(slice_installer_options(host)).to eq(meep_settings)
+        end
+      end
+    end
+  end
+
+  describe 'generate_installer_conf_file_for' do
+    it 'generates a legacy answer file if host["pe_installer_type"]=="legacy"'
+    it 'generates a meep config file if host["pe_installer_type"]=="meep"'
+  end
 
   describe 'fetch_pe' do
 
