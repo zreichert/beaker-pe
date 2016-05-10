@@ -50,7 +50,7 @@ describe ClassMixedWithDSLInstallUtils do
                                                 :working_dir => '/tmp' } ) }
   let(:unixhost)      { make_host( 'unixhost', { :platform => 'linux',
                                                  :pe_ver => '3.0',
-                                                :type => 'pe',
+                                                 :type => 'pe',
                                                  :working_dir => '/tmp',
                                                  :dist => 'puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386' } ) }
   let(:eoshost)       { make_host( 'eoshost', { :platform => 'eos',
@@ -192,6 +192,7 @@ describe ClassMixedWithDSLInstallUtils do
     it 'generates a unix PE install command for a unix host' do
       the_host = unixhost.dup
       the_host['pe_installer'] = 'puppet-enterprise-installer'
+      the_host['pe_installer_conf_setting'] = '-a /tmp/answers'
       expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp/puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386 && ./puppet-enterprise-installer -a /tmp/answers"
     end
 
@@ -229,6 +230,7 @@ describe ClassMixedWithDSLInstallUtils do
     it 'generates a unix PE install command in verbose for a unix host when pe_debug is enabled' do
       the_host = unixhost.dup
       the_host['pe_installer'] = 'puppet-enterprise-installer'
+      the_host['pe_installer_conf_setting'] = '-a /tmp/answers'
       the_host[:pe_debug] = true
       expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp/puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386 && ./puppet-enterprise-installer -D -a /tmp/answers"
     end

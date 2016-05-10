@@ -106,7 +106,7 @@ module Beaker
             host.install_from_file("puppet-enterprise-#{version}-#{host['platform']}.swix")
           else
             pe_debug = host[:pe_debug] || opts[:pe_debug]  ? ' -D' : ''
-            "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug} -a #{host['working_dir']}/answers"
+            "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug} #{host['pe_installer_conf_setting']}"
           end
         end
 
@@ -433,8 +433,8 @@ module Beaker
                 acceptable_codes = host['platform'] =~ /osx/ ? [1] : [0, 1]
                 setup_defaults_and_config_helper_on(host, master, acceptable_codes)
               else
-                answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, opts)
-                create_remote_file host, "#{host['working_dir']}/answers", answers.answer_string(host)
+                prepare_host_installer_options(host)
+                generate_installer_conf_file_for(host, hosts, opts)
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
               end
@@ -495,6 +495,44 @@ module Beaker
               end
             end
           end
+        end
+
+        # Set installer options on the passed *host* according to current
+        # version and external INSTALLER_TYPE setting.
+        #
+        # Sets:
+        #   * 'pe_installer_conf_file'
+        #   * 'pe_installer_conf_setting'
+        #   * 'pe_installer_type'
+        #
+        # @param [Beaker::Host] host The host object to configure
+        # @return [Beaker::Host] The same host object passed in
+        def prepare_host_installer_options(host)
+          conf_file = "#{host['working_dir']}/answers"
+          host['pe_installer_conf_file'] = conf_file
+          host['pe_installer_conf_setting'] = "-a #{conf_file}"
+          host['pe_installer_type'] = 'legacy'
+          host
+        end
+
+        # Generates a Beaker Answers object for the passed *host* and creates
+        # the answer or pe.conf configuration file on the *host* needed for
+        # installation.
+        #
+        # Expects the host['pe_installer_conf_file'] to have been set, which is
+        # where the configuration will be written to, and expects
+        # host['pe_installer_type'] to have been set to either 'legacy' or
+        # 'meep'.
+        #
+        # @param [Beaker::Host] host The host to create a configuration file on
+        # @param [Array<Beaker::Host]> hosts All of the hosts to be configured
+        # @param [Hash] opts The Beaker options hash
+        # @return [BeakerAnswers::Answers] the generated answers object
+        def generate_installer_conf_file_for(host, hosts, opts)
+           answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, opts)
+           configuration = answers.answer_string(host)
+           create_remote_file(host, host['pe_installer_conf_file'], configuration)
+           answers
         end
 
         # Builds the agent_only and not_agent_only arrays needed for installation.
