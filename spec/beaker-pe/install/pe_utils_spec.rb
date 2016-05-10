@@ -197,22 +197,22 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless"' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash install.bash"
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless" and "frictionless_options"' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host['frictionless_options'] = { 'main' => { 'dns_alt_names' => 'puppet' } }
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash install.bash main:dns_alt_names=puppet"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash install.bash main:dns_alt_names=puppet"
     end
 
     it 'generates a osx PE install command for a osx host' do
@@ -243,13 +243,13 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'generates a unix PE frictionless install command in verbose for a unix host with role "frictionless" and pe_debug is enabled' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host[:pe_debug] = true
-      expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash -x install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash -x install.bash"
     end
 
   end
@@ -386,7 +386,6 @@ describe ClassMixedWithDSLInstallUtils do
 
       expect( subject).to_not receive(:scp_to)
       expect( subject).to_not receive(:on)
-      allow( subject ).to receive(:version_is_less).with('3.2.0', '3.2.0').and_return(false)
       subject.fetch_pe( [unixhost], {} )
     end
   end
@@ -762,8 +761,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('2.8', '3.0').and_return( true )
       version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
@@ -779,8 +776,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.1', '3.0').and_return( false )
       version = version_win = '3.1'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
@@ -796,8 +791,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('2.8', '3.0').and_return( true )
       version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
@@ -811,8 +804,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( Beaker::Options::PEVersionScraper ).to receive( :load_pe_version ).and_return( '3.1' )
       allow( Beaker::Options::PEVersionScraper ).to receive( :load_pe_version_win ).and_return( '3.1' )
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.1', '3.0').and_return( false )
       allow( subject ).to receive( :sorted_hosts ).and_return( [hosts[0]] )
       version = version_win = '3.1'
       path = "/path/to/upgradepkg"
