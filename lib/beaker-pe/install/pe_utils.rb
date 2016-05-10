@@ -550,10 +550,12 @@ module Beaker
         # @param [Hash] opts The Beaker options hash
         # @return [BeakerAnswers::Answers] the generated answers object
         def generate_installer_conf_file_for(host, hosts, opts)
-           answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, opts)
-           configuration = answers.answer_string(host)
-           create_remote_file(host, host['pe_installer_conf_file'], configuration)
-           answers
+          format = host['pe_installer_type'] == 'meep' ? :hiera : :bash
+          beaker_opts = opts.merge(:format => format )
+          answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, beaker_opts)
+          configuration = answers.installer_configuration_string(host)
+          create_remote_file(host, host['pe_installer_conf_file'], configuration)
+          answers
         end
 
         # Builds the agent_only and not_agent_only arrays needed for installation.

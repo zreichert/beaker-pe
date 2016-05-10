@@ -324,8 +324,30 @@ describe ClassMixedWithDSLInstallUtils do
   end
 
   describe 'generate_installer_conf_file_for' do
-    it 'generates a legacy answer file if host["pe_installer_type"]=="legacy"'
-    it 'generates a meep config file if host["pe_installer_type"]=="meep"'
+    let(:master) { hosts.first }
+
+    it 'generates a legacy answer file if host["pe_installer_type"]=="legacy"' do
+      master['pe_installer_conf_file'] = '/tmp/answers'
+      master['pe_installer_type'] = 'legacy'
+      expect(subject).to receive(:create_remote_file).with(
+        master,
+        '/tmp/answers',
+        %r{q_install=y.*q_puppetmaster_certname=#{master}}m
+      )
+      subject.generate_installer_conf_file_for(master, hosts, opts)
+    end
+
+    it 'generates a meep config file if host["pe_installer_type"]=="meep"' do
+      master['pe_installer_conf_file'] = '/tmp/pe.conf'
+      master['pe_installer_type'] = 'meep'
+      master['pe_ver'] = '2016.2.0'
+      expect(subject).to receive(:create_remote_file).with(
+        master,
+        '/tmp/pe.conf',
+        %r{\{.*"puppet_enterprise::puppet_master_host": "#{master}"}m
+      )
+      subject.generate_installer_conf_file_for(master, hosts, opts)
+    end
   end
 
   describe 'fetch_pe' do
