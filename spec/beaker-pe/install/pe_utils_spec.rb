@@ -254,6 +254,68 @@ describe ClassMixedWithDSLInstallUtils do
 
   end
 
+  describe 'higgs installer' do
+    let(:host) { unixhost }
+    let(:higgs_regex) { %r{cd .* ; nohup \./puppet-enterprise-installer <<<#{higgs_answer} .*} }
+    before(:each) do
+      host['pe_installer'] = 'puppet-enterprise-installer'
+    end
+
+    def prep_host(host)
+      allow(subject).to receive(:sleep)
+      allow(host).to receive(:tmpdir).and_return('/tmp')
+      allow(subject).to receive(:fetch_pe)
+      expect(subject).to receive(:on).with(host, higgs_regex, opts).once
+      result = double(Beaker::Result, :stdout => 'Please go to https://somewhere in your browser to continue installation')
+      expect(subject).to receive(:on).with(host, %r{cd .* && cat .*}, anything)
+        .and_return(result)
+    end
+
+    context 'for legacy installer' do
+      let(:higgs_answer) { 'Y' }
+
+      context 'the higgs_installer_cmd' do
+        it 'returns correct command to invoke Higgs' do
+          expect(subject.higgs_installer_cmd(host)).to match(higgs_regex)
+        end
+      end
+
+      context 'the do_higgs_install' do
+        it 'submits the correct installer cmd to invoke Higgs' do
+          prep_host(host)
+          subject.do_higgs_install(host, opts)
+        end
+      end
+    end
+
+    context 'for meep installer' do
+      let(:higgs_answer) { '1' }
+
+      before(:each) do
+        ENV['INSTALLER_TYPE'] = 'meep'
+        host['pe_ver'] = '2016.2.0'
+      end
+
+      after(:each) do
+        ENV.delete('INSTALLER_TYPE')
+      end
+
+      context 'the higgs_installer_cmd' do
+        it 'submits correct command to invoke Higgs' do
+          subject.prepare_host_installer_options(host)
+          expect(subject.higgs_installer_cmd(host)).to match(higgs_regex)
+        end
+      end
+
+      context 'the do_higgs_install' do
+        it 'submits the correct installer cmd to invoke Higgs' do
+          prep_host(host)
+          subject.do_higgs_install(host, opts)
+        end
+      end
+    end
+  end
+
   describe 'prepare_host_installer_options' do
     let(:legacy_settings) do
       {

@@ -736,9 +736,8 @@ module Beaker
         #                    The host object must have the 'working_dir', 'dist' and 'pe_installer' field set correctly.
         # @api private
         def higgs_installer_cmd host
-
-          "cd #{host['working_dir']}/#{host['dist']} ; nohup ./#{host['pe_installer']} <<<Y > #{host['higgs_file']} 2>&1 &"
-
+          higgs_answer = host['pe_installer_type'] == 'meep' ? '1' : 'Y'
+          "cd #{host['working_dir']}/#{host['dist']} ; nohup ./#{host['pe_installer']} <<<#{higgs_answer} > #{host['higgs_file']} 2>&1 &"
         end
 
         #Perform a Puppet Enterprise Higgs install up until web browser interaction is required, runs on linux hosts only.
@@ -771,6 +770,8 @@ module Beaker
           fetch_pe([host], opts)
 
           host['higgs_file'] = "higgs_#{File.basename(host['working_dir'])}.log"
+
+          prepare_host_installer_options(host)
           on host, higgs_installer_cmd(host), opts
 
           #wait for output to host['higgs_file']
