@@ -718,6 +718,7 @@ module Beaker
         #  prep_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
         def prep_host_for_upgrade(host, opts={}, path='')
           host['pe_dir'] = host['pe_upgrade_dir'] || path
+          host['previous_pe_ver'] = host['pe_ver']
           if host['platform'] =~ /windows/
             host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
               Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
