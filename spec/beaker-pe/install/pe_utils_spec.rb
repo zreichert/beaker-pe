@@ -458,7 +458,6 @@ describe ClassMixedWithDSLInstallUtils do
       end
       allow( subject ).to receive( :on ).and_return( true )
 
-      path = unixhost['pe_dir']
       filename = "#{ unixhost['dist'] }"
       extension = '.tar'
       expect( subject ).to receive( :fetch_and_push_pe ).with( unixhost, anything, filename, extension ).once
@@ -483,7 +482,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :link_exists? ).and_return( true ) #is a tar.gz
       allow( subject ).to receive( :on ).and_return( true )
 
-      path = unixhost['pe_dir']
       filename = "#{ unixhost['dist'] }"
       extension = '.tar.gz'
       expect( subject ).to receive( :fetch_and_push_pe ).with( unixhost, anything, filename, extension ).once
@@ -918,7 +916,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -933,7 +930,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      version = version_win = '3.1'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -948,7 +944,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -962,7 +957,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( Beaker::Options::PEVersionScraper ).to receive( :load_pe_version_win ).and_return( '3.1' )
       allow( subject ).to receive( :hosts ).and_return( hosts )
       allow( subject ).to receive( :sorted_hosts ).and_return( [hosts[0]] )
-      version = version_win = '3.1'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( [hosts[0]], {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe_on(hosts[0], {}, path)
