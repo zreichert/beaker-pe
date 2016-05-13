@@ -52,6 +52,44 @@ describe ClassMixedWithDSLInstallUtils do
                                                 :type => 'pe',
                                                 :working_dir => '/tmp',
                                                 :dist => 'puppet-enterprise-3.7.1-rc0-78-gffc958f-eos-4-i386' } ) }
+
+  context '#prep_host_for_upgrade' do
+
+    it 'sets per host options before global options' do
+      opts['pe_upgrade_ver'] = 'options-specific-var'
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = 'host-specific-pe-dir'
+        host['pe_upgrade_ver'] = 'host-specific-pe-ver'
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_dir']).to eq('host-specific-pe-dir')
+        expect(host['pe_ver']).to eq('host-specific-pe-ver')
+      end
+    end
+
+    it 'sets global options when no host options are available' do
+      opts['pe_upgrade_ver'] = 'options-specific-var'
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = nil
+        host['pe_upgrade_ver'] = nil
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_dir']).to eq('argument-specific-pe-dir')
+        expect(host['pe_ver']).to eq('options-specific-var')
+      end
+    end
+
+    it 'calls #load_pe_version when neither global or host options are present' do
+      opts['pe_upgrade_ver'] = nil
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = nil
+        host['pe_upgrade_ver'] = nil
+        expect( Beaker::Options::PEVersionScraper ).to receive(:load_pe_version).and_return('file_version')
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_ver']).to eq('file_version')
+        expect(host['pe_dir']).to eq('argument-specific-pe-dir')
+      end
+    end
+  end
+
   context '#configure_pe_defaults_on' do
     it 'uses aio paths for hosts of role aio' do
       hosts.each do |host|

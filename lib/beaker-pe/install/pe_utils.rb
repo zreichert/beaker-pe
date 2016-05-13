@@ -634,20 +634,33 @@ module Beaker
             end
             # get new version information
             hosts.each do |host|
-              host['pe_dir'] = host['pe_upgrade_dir'] || path
-              if host['platform'] =~ /windows/
-                host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
-                  Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
-              else
-                host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
-                  Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file])
-              end
-              if version_is_less(host['pe_ver'], '3.0')
-                host['pe_installer'] ||= 'puppet-enterprise-upgrader'
-              end
+              prep_host_for_upgrade(host, opts, path)
             end
             do_install(sorted_hosts, opts.merge({:type => :upgrade, :set_console_password => set_console_password}))
             opts['upgrade'] = true
+          end
+        end
+
+        #Prep a host object for upgrade; used inside upgrade_pe_on
+        # @param [Host] host A single host object to prepare for upgrade
+        # !macro common_opts
+        # @param [String] path A path (either local directory or a URL to a listing of PE builds).
+        #                      Will contain a LATEST file indicating the latest build to install.
+        #                      This is ignored if a pe_upgrade_ver and pe_upgrade_dir are specified
+        #                      in the host configuration file.
+        # @example
+        #  pre_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
+        def prep_host_for_upgrade(host, opts={}, path='')
+          host['pe_dir'] = host['pe_upgrade_dir'] || path
+          if host['platform'] =~ /windows/
+            host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
+              Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
+          else
+            host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
+              Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file])
+          end
+          if version_is_less(host['pe_ver'], '3.0')
+            host['pe_installer'] ||= 'puppet-enterprise-upgrader'
           end
         end
 
