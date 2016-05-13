@@ -406,7 +406,7 @@ describe ClassMixedWithDSLInstallUtils do
       expect(subject).to receive(:create_remote_file).with(
         master,
         '/tmp/pe.conf',
-        %r{\{.*"puppet_enterprise::puppet_master_host": "#{master}"}m
+        %r{\{.*"puppet_enterprise::puppet_master_host": "#{master.hostname}"}m
       )
       subject.generate_installer_conf_file_for(master, hosts, opts)
     end
