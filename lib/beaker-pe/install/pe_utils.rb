@@ -536,6 +536,28 @@ module Beaker
           host
         end
 
+        # Adds in settings needed by BeakerAnswers:
+        #
+        # * :format => :bash or :hiera depending on which legacy or meep format we need
+        # * :include_legacy_database_defaults => true or false.  True
+        #   indicates that we are upgrading from a legacy version and
+        #   BeakerAnswers should include the database defaults for user
+        #   which were set for the legacy install.
+        #
+        # @param [Beaker::Host] host that we are generating answers for
+        # @param [Hash] opts The Beaker options hash
+        # @return [Hash] a dup of the opts hash with additional settings for BeakerAnswers
+        def setup_beaker_answers_opts(host, opts)
+          beaker_answers_opts = host['pe_installer_type'] == 'meep' ?
+            { :format => :hiera } :
+            { :format => :bash }
+
+          beaker_answers_opts[:include_legacy_database_defaults] =
+            opts[:type] == :upgrade && !use_meep?(host['previous_pe_ver'])
+
+          opts.merge(beaker_answers_opts)
+        end
+
         # Generates a Beaker Answers object for the passed *host* and creates
         # the answer or pe.conf configuration file on the *host* needed for
         # installation.
@@ -550,11 +572,17 @@ module Beaker
         # @param [Hash] opts The Beaker options hash
         # @return [BeakerAnswers::Answers] the generated answers object
         def generate_installer_conf_file_for(host, hosts, opts)
-          format = host['pe_installer_type'] == 'meep' ? :hiera : :bash
-          beaker_opts = opts.merge(:format => format )
-          answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, beaker_opts)
+          beaker_answers_opts = setup_beaker_answers_opts(host, opts)
+          answers = BeakerAnswers::Answers.create(
+            opts[:pe_ver] || host['pe_ver'], hosts, beaker_answers_opts
+          )
           configuration = answers.installer_configuration_string(host)
-          create_remote_file(host, host['pe_installer_conf_file'], configuration)
+
+          step "Generate the #{host['pe_installer_conf_file']} on #{host}" do
+            logger.debug(configuration)
+            create_remote_file(host, host['pe_installer_conf_file'], configuration)
+          end
+
           answers
         end
 

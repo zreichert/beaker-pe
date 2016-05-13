@@ -412,6 +412,73 @@ describe ClassMixedWithDSLInstallUtils do
     end
   end
 
+  describe 'setup_beaker_answers_opts' do
+    let(:opts) { {} }
+    let(:host) { hosts.first }
+
+    context 'for legacy installer' do
+      it 'adds option for bash format' do
+        host['pe_installer_type'] = 'legacy'
+        expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+          opts.merge(
+            :format => :bash,
+            :include_legacy_database_defaults => false,
+          )
+        )
+      end
+    end
+
+    context 'for meep installer' do
+      before(:each) do
+        ENV['INSTALLER_TYPE'] = 'meep'
+        host['pe_ver'] = '2016.2.0'
+        host['pe_installer_type'] = 'meep'
+      end
+
+      after(:each) do
+        ENV.delete('INSTALLER_TYPE')
+      end
+
+      it 'adds option for hiera format' do
+        expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+          opts.merge(
+            :format => :hiera,
+            :include_legacy_database_defaults => false,
+          )
+        )
+      end
+
+      context 'when upgrading' do
+        let(:opts) { { :type => :upgrade } }
+
+        context 'from meep' do
+          it 'sets legacy password defaults false' do
+            host['pe_ver'] = '2016.2.1'
+            host['previous_pe_ver'] = '2016.2.0'
+            expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+              opts.merge(
+                :format => :hiera,
+                :include_legacy_database_defaults => false,
+              )
+            )
+          end
+        end
+
+        context 'from legacy' do
+          it 'sets legacy password defaults to true' do
+            host['previous_pe_ver'] = '3.8.5'
+            expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+              opts.merge(
+                :format => :hiera,
+                :include_legacy_database_defaults => true,
+              )
+            )
+          end
+        end
+      end
+    end
+  end
+
   describe 'fetch_pe' do
 
     it 'can push a local PE .tar.gz to a host and unpack it' do
@@ -755,6 +822,7 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'sets puppet-agent acceptable_exit_codes correctly for config helper on upgrade' do
       hosts = make_hosts({
+                           :previous_pe_ver => '3.0',
                            :pe_ver => '4.0',
                            :roles => ['agent'],
                          }, 2)
@@ -962,6 +1030,16 @@ describe ClassMixedWithDSLInstallUtils do
       subject.upgrade_pe_on(hosts[0], {}, path)
     end
 
+    it 'sets previous_pe_ver' do
+      subject.hosts = hosts
+      host = hosts[0]
+      host['pe_ver'] = '3.8.5'
+      host['pe_upgrade_ver'] = '2016.2.0'
+      expect(subject).to receive(:do_install).with([host], Hash)
+      subject.upgrade_pe_on([host], {})
+      expect(host['pe_ver']).to eq('2016.2.0')
+      expect(host['previous_pe_ver']).to eq('3.8.5')
+    end
   end
 
   describe 'fetch_and_push_pe' do
