@@ -12,6 +12,8 @@ class ClassMixedWithDSLInstallUtils
 
   attr_accessor :hosts
 
+  # Because some the methods now actually call out to the `step` method, we need to
+  # mock out `metadata` that is initialized in a test case.
   def metadata
     @metadata ||= {}
   end
@@ -444,9 +446,6 @@ describe ClassMixedWithDSLInstallUtils do
       #run rake task on dashboard
 
       expect( subject ).to receive( :on ).with( hosts[0], /\/opt\/puppet\/bin\/rake -sf \/opt\/puppet\/share\/puppet-dashboard\/Rakefile .* RAILS_ENV=production/ ).once
-      #wait for all hosts to appear in the dashboard
-      #run puppet agent now that installation is complete
-      #expect( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).once
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )

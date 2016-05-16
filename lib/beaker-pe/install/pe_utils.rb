@@ -649,7 +649,7 @@ module Beaker
         #                      This is ignored if a pe_upgrade_ver and pe_upgrade_dir are specified
         #                      in the host configuration file.
         # @example
-        #  pre_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
+        #  prep_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
         def prep_host_for_upgrade(host, opts={}, path='')
           host['pe_dir'] = host['pe_upgrade_dir'] || path
           if host['platform'] =~ /windows/
