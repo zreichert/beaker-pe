@@ -2,6 +2,7 @@
     require "beaker/dsl/install_utils/#{lib}"
 end
 require "beaker-answers"
+require "timeout"
 module Beaker
   module DSL
     module InstallUtils
@@ -448,17 +449,20 @@ module Beaker
             # Wait for PuppetDB to be totally up and running (post 3.0 version of pe only)
             sleep_until_puppetdb_started(database) unless pre30database
 
-            # Run the agent once to ensure everything is in the dashboard
-            install_hosts.each do |host|
-              on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+            step "First puppet agent run" do
+              # Run the agent once to ensure everything is in the dashboard
+              install_hosts.each do |host|
+                on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
 
-              # Workaround for PE-1105 when deploying 3.0.0
-              # The installer did not respect our database host answers in 3.0.0,
-              # and would cause puppetdb to be bounced by the agent run. By sleeping
-              # again here, we ensure that if that bounce happens during an upgrade
-              # test we won't fail early in the install process.
-              if host['pe_ver'] == '3.0.0' and host == database
-                sleep_until_puppetdb_started(database)
+                # Workaround for PE-1105 when deploying 3.0.0
+                # The installer did not respect our database host answers in 3.0.0,
+                # and would cause puppetdb to be bounced by the agent run. By sleeping
+                # again here, we ensure that if that bounce happens during an upgrade
+                # test we won't fail early in the install process.
+                if host == database && ! pre30database
+                  sleep_until_puppetdb_started(database)
+                  check_puppetdb_status_endpoint(database)
+                end
               end
             end
 
@@ -476,9 +480,20 @@ module Beaker
               on dashboard, "/opt/puppet/bin/rake -sf /opt/puppet/share/puppet-dashboard/Rakefile #{task} RAILS_ENV=production"
             end
 
-            # Now that all hosts are in the dashbaord, run puppet one more
-            # time to configure mcollective
-            on install_hosts, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+            step "Final puppet agent run" do
+              # Now that all hosts are in the dashbaord, run puppet one more
+              # time to configure mcollective
+              install_hosts.each do |host|
+                on host, puppet_agent('-t'), :acceptable_exit_codes => [0,2]
+                # To work around PE-14318 if we just ran puppet agent on the
+                # database node we will need to wait until puppetdb is up and
+                # running before continuing
+                if host == database && ! pre30database
+                  sleep_until_puppetdb_started(database)
+                  check_puppetdb_status_endpoint(database)
+                end
+              end
+            end
           end
         end
 
@@ -535,6 +550,22 @@ module Beaker
         #@see #install_pe_on
         def install_pe
           install_pe_on(hosts, options)
+        end
+
+        def check_puppetdb_status_endpoint(host)
+          if version_is_less(host['pe_ver'], '2016.1.0')
+            return true
+          end
+          Timeout.timeout(60) do
+            match = nil
+            while not match
+              output = on(host, "curl -s http://localhost:8080/pdb/meta/v1/version", :accept_all_exit_codes => true)
+              match = output.stdout =~ /version.*\d+\.\d+\.\d+/
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          fail_test "PuppetDB took too long to start"
         end
 
         #Install PE based upon host configuration and options
@@ -608,20 +639,33 @@ module Beaker
             end
             # get new version information
             hosts.each do |host|
-              host['pe_dir'] = host['pe_upgrade_dir'] || path
-              if host['platform'] =~ /windows/
-                host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
-                  Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
-              else
-                host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
-                  Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file])
-              end
-              if version_is_less(host['pe_ver'], '3.0')
-                host['pe_installer'] ||= 'puppet-enterprise-upgrader'
-              end
+              prep_host_for_upgrade(host, opts, path)
             end
             do_install(sorted_hosts, opts.merge({:type => :upgrade, :set_console_password => set_console_password}))
             opts['upgrade'] = true
+          end
+        end
+
+        #Prep a host object for upgrade; used inside upgrade_pe_on
+        # @param [Host] host A single host object to prepare for upgrade
+        # !macro common_opts
+        # @param [String] path A path (either local directory or a URL to a listing of PE builds).
+        #                      Will contain a LATEST file indicating the latest build to install.
+        #                      This is ignored if a pe_upgrade_ver and pe_upgrade_dir are specified
+        #                      in the host configuration file.
+        # @example
+        #  prep_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
+        def prep_host_for_upgrade(host, opts={}, path='')
+          host['pe_dir'] = host['pe_upgrade_dir'] || path
+          if host['platform'] =~ /windows/
+            host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
+              Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
+          else
+            host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
+              Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file])
+          end
+          if version_is_less(host['pe_ver'], '3.0')
+            host['pe_installer'] ||= 'puppet-enterprise-upgrader'
           end
         end
 

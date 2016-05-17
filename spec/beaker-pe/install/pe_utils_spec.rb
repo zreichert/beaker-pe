@@ -12,6 +12,12 @@ class ClassMixedWithDSLInstallUtils
 
   attr_accessor :hosts
 
+  # Because some the methods now actually call out to the `step` method, we need to
+  # mock out `metadata` that is initialized in a test case.
+  def metadata
+    @metadata ||= {}
+  end
+
   def logger
     @logger ||= RSpec::Mocks::Double.new('logger').as_null_object
   end
@@ -48,6 +54,44 @@ describe ClassMixedWithDSLInstallUtils do
                                                 :type => 'pe',
                                                 :working_dir => '/tmp',
                                                 :dist => 'puppet-enterprise-3.7.1-rc0-78-gffc958f-eos-4-i386' } ) }
+
+  context '#prep_host_for_upgrade' do
+
+    it 'sets per host options before global options' do
+      opts['pe_upgrade_ver'] = 'options-specific-var'
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = 'host-specific-pe-dir'
+        host['pe_upgrade_ver'] = 'host-specific-pe-ver'
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_dir']).to eq('host-specific-pe-dir')
+        expect(host['pe_ver']).to eq('host-specific-pe-ver')
+      end
+    end
+
+    it 'sets global options when no host options are available' do
+      opts['pe_upgrade_ver'] = 'options-specific-var'
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = nil
+        host['pe_upgrade_ver'] = nil
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_dir']).to eq('argument-specific-pe-dir')
+        expect(host['pe_ver']).to eq('options-specific-var')
+      end
+    end
+
+    it 'calls #load_pe_version when neither global or host options are present' do
+      opts['pe_upgrade_ver'] = nil
+      hosts.each do |host|
+        host['pe_upgrade_dir'] = nil
+        host['pe_upgrade_ver'] = nil
+        expect( Beaker::Options::PEVersionScraper ).to receive(:load_pe_version).and_return('file_version')
+        subject.prep_host_for_upgrade(host, opts, 'argument-specific-pe-dir')
+        expect(host['pe_ver']).to eq('file_version')
+        expect(host['pe_dir']).to eq('argument-specific-pe-dir')
+      end
+    end
+  end
+
   context '#configure_pe_defaults_on' do
     it 'uses aio paths for hosts of role aio' do
       hosts.each do |host|
@@ -355,6 +399,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('3.0', '3.0').and_return( false )
       allow( subject ).to receive( :version_is_less ).with('3.0', '3.99').and_return( true )
       allow( subject ).to receive( :version_is_less ).with('3.99', '3.0').and_return( false )
+      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
+      allow( subject ).to receive( :version_is_less ).with('3.0', '2016.1.0').and_return( false )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -390,19 +436,16 @@ describe ClassMixedWithDSLInstallUtils do
       expect( subject ).to receive( :stop_agent_on ).with( hosts[1] ).once
       expect( subject ).to receive( :stop_agent_on ).with( hosts[2] ).once
       expect( subject ).to receive( :stop_agent_on ).with( hosts[3] ).once
-      #wait for puppetdb to start
-      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).once
-      #run each puppet agent once
-      expect( subject ).to receive( :on ).with( hosts[0], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
-      expect( subject ).to receive( :on ).with( hosts[1], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
-      expect( subject ).to receive( :on ).with( hosts[2], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
-      expect( subject ).to receive( :on ).with( hosts[3], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
+      # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
+      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
+      # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
+      expect( subject ).to receive( :on ).with( hosts[0], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
+      expect( subject ).to receive( :on ).with( hosts[1], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
+      expect( subject ).to receive( :on ).with( hosts[2], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
+      expect( subject ).to receive( :on ).with( hosts[3], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       #run rake task on dashboard
 
       expect( subject ).to receive( :on ).with( hosts[0], /\/opt\/puppet\/bin\/rake -sf \/opt\/puppet\/share\/puppet-dashboard\/Rakefile .* RAILS_ENV=production/ ).once
-      #wait for all hosts to appear in the dashboard
-      #run puppet agent now that installation is complete
-      expect( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).once
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -469,6 +512,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
+      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -490,12 +535,11 @@ describe ClassMixedWithDSLInstallUtils do
         expect( subject ).to receive( :configure_type_defaults_on ).with( host ).once
         expect( subject ).to receive( :sign_certificate_for ).with( host ).once
         expect( subject ).to receive( :stop_agent_on ).with( host ).once
-        expect( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
+        # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
+        expect( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       end
-      #wait for puppetdb to start
-      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).once#wait for all hosts to appear in the dashboard
-      #run puppet agent now that installation is complete
-      expect( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).once
+      # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
+      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -530,6 +574,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
       allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
+      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
@@ -551,12 +597,11 @@ describe ClassMixedWithDSLInstallUtils do
         expect( subject ).to receive( :configure_type_defaults_on ).with( host ).once
         expect( subject ).to receive( :sign_certificate_for ).with( host ).once
         expect( subject ).to receive( :stop_agent_on ).with( host ).once
-        expect( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] ).once
+        # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
+        expect( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       end
-      #wait for puppetdb to start
-      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).once#wait for all hosts to appear in the dashboard
-      #run puppet agent now that installation is complete
-      expect( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).once
+      #  We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
+      expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -590,6 +635,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
       # pe_ver is only set on the hosts for this test, not the opt
       allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
+      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
+      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -610,12 +657,13 @@ describe ClassMixedWithDSLInstallUtils do
         allow( subject ).to receive( :add_pe_defaults_on ).with( host ) unless subject.aio_version?(host)
         allow( subject ).to receive( :sign_certificate_for ).with( host )
         allow( subject ).to receive( :stop_agent_on ).with( host )
+        # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
         allow( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] )
       end
-      #wait for puppetdb to start
-      allow( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ) #wait for all hosts to appear in the dashboard
+      #  We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
+      allow( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times 
       #run puppet agent now that installation is complete
-      allow( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] )
+      allow( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).twice
 
       opts[:type] = :upgrade
       expect( subject ).to receive( :setup_defaults_and_config_helper_on ).with( hosts[1], hosts[0], [0, 1, 2] )
