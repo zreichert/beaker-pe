@@ -1,11 +1,95 @@
 # default - History
 ## Tags
-* [LATEST - 4 Apr, 2016 (b3175863)](#LATEST)
+* [LATEST - 18 May, 2016 (d9a052a4)](#LATEST)
+* [0.1.2 - 4 Apr, 2016 (a6fd7bef)](#0.1.2)
 * [0.1.1 - 4 Apr, 2016 (8203d928)](#0.1.1)
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 4 Apr, 2016 (b3175863)
+### <a name = "LATEST">LATEST - 18 May, 2016 (d9a052a4)
+
+* (GEM) update beaker-pe version to 0.2.0 (d9a052a4)
+
+* Merge pull request #1 from Renelast/fix/windows_masterless (ef4be9a2)
+
+
+```
+Merge pull request #1 from Renelast/fix/windows_masterless
+
+Fixes windows masterless installation
+```
+* Merge branch 'master' of https://github.com/puppetlabs/beaker-pe into fix/windows_masterless (f1a96fb2)
+
+* Merge pull request #7 from tvpartytonight/BKR-656 (aa566657)
+
+
+```
+Merge pull request #7 from tvpartytonight/BKR-656
+
+(maint) Remove leftover comments
+```
+* (maint) Remove leftover comments (c7ce982b)
+
+
+```
+(maint) Remove leftover comments
+
+This removes some straggling comments and adds a comment to the new
+metadata object in the `ClassMixedWithDSLInstallUtils` class.
+```
+* Merge pull request #6 from tvpartytonight/BKR-656 (c1ea366b)
+
+
+```
+Merge pull request #6 from tvpartytonight/BKR-656
+
+BKR-656
+```
+* (BKR-656) refactor pe_ver setting into independent method (0d918c46)
+
+
+```
+(BKR-656) refactor pe_ver setting into independent method
+
+Previous to this commit, transforming a host object prior to upgrading
+was handled in the upgrade_pe_on method. This change removes that logic
+from that method and allows for independent transformation to happen in
+a new prep_host_for_upgrade method.
+```
+* (BKR-656) Update spec tests for do_install (b602661f)
+
+
+```
+(BKR-656) Update spec tests for do_install
+
+Commit 7112971ac7b14b8c3e9703523bbb8526af6fdfbe introduced changes to
+the do_install method but did not have any updates for the spec tests.
+This commit adds those tests in.
+```
+* Adds type defaults and runs puppet agent on masterless windows (e7d06a3f)
+
+* Fixes windows masterless installation (9ff54261)
+
+
+```
+Fixes windows masterless installation
+
+Setting up a masterless windows client would fail with the following error:
+
+Exited: 1
+/usr/local/rvm/gems/ruby-2.2.1/gems/beaker-2.37.0/lib/beaker/host.rb:330:in `exec': Host 'sxrwjhkia9gzo03' exited with 1 running: (Beaker::Host::CommandFailure)
+ cmd.exe /c puppet config set server
+Last 10 lines of output were:
+        Error: puppet config set takes 2 arguments, but you gave 1
+        Error: Try 'puppet help config set' for usage
+
+As far as I could see this error is caused by the 'setup_defaults_and_config_helper_on' function which tries to set the master configuration setting in puppet.conf. But since there is no master varaible available this failes.
+
+This patch should fix that by only calling setup_defaults_and_config_helper_on whern we're not doing a masterless installation.
+```
+### <a name = "0.1.2">0.1.2 - 4 Apr, 2016 (a6fd7bef)
+
+* (HISTORY) update beaker-pe history for gem release 0.1.2 (a6fd7bef)
 
 * (GEM) update beaker-pe version to 0.1.2 (b3175863)
 
