@@ -443,8 +443,15 @@ module Beaker
               end
             end
 
-            # On each agent, we ensure the certificate is signed then shut down the agent
-            sign_certificate_for(host) unless masterless
+            # On each agent, we ensure the certificate is signed
+            if !masterless
+              if [master, database, dashboard].include?(host) && use_meep?(host['pe_ver'])
+                # This step is not necessary for the core pe nodes when using meep
+              else
+                sign_certificate_for(host)
+              end
+            end
+            # then shut down the agent
             stop_agent_on(host)
           end
 
