@@ -448,11 +448,15 @@ module Beaker
               if [master, database, dashboard].include?(host) && use_meep?(host['pe_ver'])
                 # This step is not necessary for the core pe nodes when using meep
               else
-                sign_certificate_for(host)
+                step "Sign certificate for #{host}" do
+                  sign_certificate_for(host)
+                end
               end
             end
             # then shut down the agent
-            stop_agent_on(host)
+            step "Shutting down agent for #{host}" do
+              stop_agent_on(host)
+            end
           end
 
           unless masterless
