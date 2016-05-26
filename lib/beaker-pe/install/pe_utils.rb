@@ -22,6 +22,9 @@ module Beaker
         include PuppetUtils
         include WindowsUtils
 
+        # Version of PE when we switched from legacy installer to MEEP.
+        MEEP_CUTOVER_VERSION = '2016.2.0'
+
         # @!macro [new] common_opts
         #   @param [Hash{Symbol=>String}] opts Options to alter execution.
         #   @option opts [Boolean] :silent (false) Do not produce log output
@@ -106,7 +109,7 @@ module Beaker
             host.install_from_file("puppet-enterprise-#{version}-#{host['platform']}.swix")
           else
             pe_debug = host[:pe_debug] || opts[:pe_debug]  ? ' -D' : ''
-            "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug} -a #{host['working_dir']}/answers"
+            "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug} #{host['pe_installer_conf_setting']}"
           end
         end
 
@@ -433,16 +436,27 @@ module Beaker
                 acceptable_codes = host['platform'] =~ /osx/ ? [1] : [0, 1]
                 setup_defaults_and_config_helper_on(host, master, acceptable_codes)
               else
-                answers = BeakerAnswers::Answers.create(opts[:pe_ver] || host['pe_ver'], hosts, opts)
-                create_remote_file host, "#{host['working_dir']}/answers", answers.answer_string(host)
+                prepare_host_installer_options(host)
+                generate_installer_conf_file_for(host, hosts, opts)
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
               end
             end
 
-            # On each agent, we ensure the certificate is signed then shut down the agent
-            sign_certificate_for(host) unless masterless
-            stop_agent_on(host)
+            # On each agent, we ensure the certificate is signed
+            if !masterless
+              if [master, database, dashboard].include?(host) && use_meep?(host['pe_ver'])
+                # This step is not necessary for the core pe nodes when using meep
+              else
+                step "Sign certificate for #{host}" do
+                  sign_certificate_for(host)
+                end
+              end
+            end
+            # then shut down the agent
+            step "Shutting down agent for #{host}" do
+              stop_agent_on(host)
+            end
           end
 
           unless masterless
@@ -495,6 +509,92 @@ module Beaker
               end
             end
           end
+        end
+
+        # True if version is greater than or equal to 2016.2.0 and the
+        # INSTALLER_TYPE environment variable is 'meep'.
+        #
+        # This will be switched to be true if >= 2016.2.0 and INSTALLER_TYPE !=
+        # 'legacy' once meep is default.
+        #
+        # And then to just >= 2016.2.0 for cutover.
+        def use_meep?(version)
+          !version_is_less(version, MEEP_CUTOVER_VERSION) && ENV['INSTALLER_TYPE'] == 'meep'
+        end
+
+        # Set installer options on the passed *host* according to current
+        # version and external INSTALLER_TYPE setting.
+        #
+        # Sets:
+        #   * 'pe_installer_conf_file'
+        #   * 'pe_installer_conf_setting'
+        #   * 'pe_installer_type'
+        #
+        # @param [Beaker::Host] host The host object to configure
+        # @return [Beaker::Host] The same host object passed in
+        def prepare_host_installer_options(host)
+          if use_meep?(host['pe_ver'])
+            conf_file = "#{host['working_dir']}/pe.conf"
+            host['pe_installer_conf_file'] = conf_file
+            host['pe_installer_conf_setting'] = "-c #{conf_file}"
+            host['pe_installer_type'] = 'meep'
+          else
+            conf_file = "#{host['working_dir']}/answers"
+            host['pe_installer_conf_file'] = conf_file
+            host['pe_installer_conf_setting'] = "-a #{conf_file}"
+            host['pe_installer_type'] = 'legacy'
+          end
+          host
+        end
+
+        # Adds in settings needed by BeakerAnswers:
+        #
+        # * :format => :bash or :hiera depending on which legacy or meep format we need
+        # * :include_legacy_database_defaults => true or false.  True
+        #   indicates that we are upgrading from a legacy version and
+        #   BeakerAnswers should include the database defaults for user
+        #   which were set for the legacy install.
+        #
+        # @param [Beaker::Host] host that we are generating answers for
+        # @param [Hash] opts The Beaker options hash
+        # @return [Hash] a dup of the opts hash with additional settings for BeakerAnswers
+        def setup_beaker_answers_opts(host, opts)
+          beaker_answers_opts = host['pe_installer_type'] == 'meep' ?
+            { :format => :hiera } :
+            { :format => :bash }
+
+          beaker_answers_opts[:include_legacy_database_defaults] =
+            opts[:type] == :upgrade && !use_meep?(host['previous_pe_ver'])
+
+          opts.merge(beaker_answers_opts)
+        end
+
+        # Generates a Beaker Answers object for the passed *host* and creates
+        # the answer or pe.conf configuration file on the *host* needed for
+        # installation.
+        #
+        # Expects the host['pe_installer_conf_file'] to have been set, which is
+        # where the configuration will be written to, and expects
+        # host['pe_installer_type'] to have been set to either 'legacy' or
+        # 'meep'.
+        #
+        # @param [Beaker::Host] host The host to create a configuration file on
+        # @param [Array<Beaker::Host]> hosts All of the hosts to be configured
+        # @param [Hash] opts The Beaker options hash
+        # @return [BeakerAnswers::Answers] the generated answers object
+        def generate_installer_conf_file_for(host, hosts, opts)
+          beaker_answers_opts = setup_beaker_answers_opts(host, opts)
+          answers = BeakerAnswers::Answers.create(
+            opts[:pe_ver] || host['pe_ver'], hosts, beaker_answers_opts
+          )
+          configuration = answers.installer_configuration_string(host)
+
+          step "Generate the #{host['pe_installer_conf_file']} on #{host}" do
+            logger.debug(configuration)
+            create_remote_file(host, host['pe_installer_conf_file'], configuration)
+          end
+
+          answers
         end
 
         # Builds the agent_only and not_agent_only arrays needed for installation.
@@ -657,6 +757,7 @@ module Beaker
         #  prep_host_for_upgrade(master, {}, "http://neptune.puppetlabs.lan/3.0/ci-ready/")
         def prep_host_for_upgrade(host, opts={}, path='')
           host['pe_dir'] = host['pe_upgrade_dir'] || path
+          host['previous_pe_ver'] = host['pe_ver']
           if host['platform'] =~ /windows/
             host['pe_ver'] = host['pe_upgrade_ver'] || opts['pe_upgrade_ver'] ||
               Options::PEVersionScraper.load_pe_version(host['pe_dir'], opts[:pe_version_file_win])
@@ -675,9 +776,8 @@ module Beaker
         #                    The host object must have the 'working_dir', 'dist' and 'pe_installer' field set correctly.
         # @api private
         def higgs_installer_cmd host
-
-          "cd #{host['working_dir']}/#{host['dist']} ; nohup ./#{host['pe_installer']} <<<Y > #{host['higgs_file']} 2>&1 &"
-
+          higgs_answer = host['pe_installer_type'] == 'meep' ? '1' : 'Y'
+          "cd #{host['working_dir']}/#{host['dist']} ; nohup ./#{host['pe_installer']} <<<#{higgs_answer} > #{host['higgs_file']} 2>&1 &"
         end
 
         #Perform a Puppet Enterprise Higgs install up until web browser interaction is required, runs on linux hosts only.
@@ -710,6 +810,8 @@ module Beaker
           fetch_pe([host], opts)
 
           host['higgs_file'] = "higgs_#{File.basename(host['working_dir'])}.log"
+
+          prepare_host_installer_options(host)
           on host, higgs_installer_cmd(host), opts
 
           #wait for output to host['higgs_file']

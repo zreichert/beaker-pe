@@ -10,7 +10,11 @@ class ClassMixedWithDSLInstallUtils
   include Beaker::DSL::Patterns
   include Beaker::DSL::PE
 
-  attr_accessor :hosts
+  attr_accessor :hosts, :metadata
+
+  def initialize
+    @metadata = {}
+  end
 
   # Because some the methods now actually call out to the `step` method, we need to
   # mock out `metadata` that is initialized in a test case.
@@ -46,7 +50,7 @@ describe ClassMixedWithDSLInstallUtils do
                                                 :working_dir => '/tmp' } ) }
   let(:unixhost)      { make_host( 'unixhost', { :platform => 'linux',
                                                  :pe_ver => '3.0',
-                                                :type => 'pe',
+                                                 :type => 'pe',
                                                  :working_dir => '/tmp',
                                                  :dist => 'puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386' } ) }
   let(:eoshost)       { make_host( 'eoshost', { :platform => 'eos',
@@ -188,26 +192,27 @@ describe ClassMixedWithDSLInstallUtils do
     it 'generates a unix PE install command for a unix host' do
       the_host = unixhost.dup
       the_host['pe_installer'] = 'puppet-enterprise-installer'
+      the_host['pe_installer_conf_setting'] = '-a /tmp/answers'
       expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp/puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386 && ./puppet-enterprise-installer -a /tmp/answers"
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless"' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash install.bash"
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless" and "frictionless_options"' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host['frictionless_options'] = { 'main' => { 'dns_alt_names' => 'puppet' } }
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash install.bash main:dns_alt_names=puppet"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash install.bash main:dns_alt_names=puppet"
     end
 
     it 'generates a osx PE install command for a osx host' do
@@ -225,6 +230,7 @@ describe ClassMixedWithDSLInstallUtils do
     it 'generates a unix PE install command in verbose for a unix host when pe_debug is enabled' do
       the_host = unixhost.dup
       the_host['pe_installer'] = 'puppet-enterprise-installer'
+      the_host['pe_installer_conf_setting'] = '-a /tmp/answers'
       the_host[:pe_debug] = true
       expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp/puppet-enterprise-3.1.0-rc0-230-g36c9e5c-debian-7-i386 && ./puppet-enterprise-installer -D -a /tmp/answers"
     end
@@ -237,17 +243,241 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'generates a unix PE frictionless install command in verbose for a unix host with role "frictionless" and pe_debug is enabled' do
-      allow( subject ).to receive( :version_is_less ).and_return( false )
       allow( subject ).to receive( :master ).and_return( 'testmaster' )
       the_host = unixhost.dup
+      the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host[:pe_debug] = true
-      expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.0/install.bash && bash -x install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/3.8.0/install.bash && bash -x install.bash"
     end
 
   end
 
+  describe 'higgs installer' do
+    let(:host) { unixhost }
+    let(:higgs_regex) { %r{cd .* ; nohup \./puppet-enterprise-installer <<<#{higgs_answer} .*} }
+    before(:each) do
+      host['pe_installer'] = 'puppet-enterprise-installer'
+    end
+
+    def prep_host(host)
+      allow(subject).to receive(:sleep)
+      allow(host).to receive(:tmpdir).and_return('/tmp')
+      allow(subject).to receive(:fetch_pe)
+      expect(subject).to receive(:on).with(host, higgs_regex, opts).once
+      result = double(Beaker::Result, :stdout => 'Please go to https://somewhere in your browser to continue installation')
+      expect(subject).to receive(:on).with(host, %r{cd .* && cat .*}, anything)
+        .and_return(result)
+    end
+
+    context 'for legacy installer' do
+      let(:higgs_answer) { 'Y' }
+
+      context 'the higgs_installer_cmd' do
+        it 'returns correct command to invoke Higgs' do
+          expect(subject.higgs_installer_cmd(host)).to match(higgs_regex)
+        end
+      end
+
+      context 'the do_higgs_install' do
+        it 'submits the correct installer cmd to invoke Higgs' do
+          prep_host(host)
+          subject.do_higgs_install(host, opts)
+        end
+      end
+    end
+
+    context 'for meep installer' do
+      let(:higgs_answer) { '1' }
+
+      before(:each) do
+        ENV['INSTALLER_TYPE'] = 'meep'
+        host['pe_ver'] = '2016.2.0'
+      end
+
+      after(:each) do
+        ENV.delete('INSTALLER_TYPE')
+      end
+
+      context 'the higgs_installer_cmd' do
+        it 'submits correct command to invoke Higgs' do
+          subject.prepare_host_installer_options(host)
+          expect(subject.higgs_installer_cmd(host)).to match(higgs_regex)
+        end
+      end
+
+      context 'the do_higgs_install' do
+        it 'submits the correct installer cmd to invoke Higgs' do
+          prep_host(host)
+          subject.do_higgs_install(host, opts)
+        end
+      end
+    end
+  end
+
+  describe 'prepare_host_installer_options' do
+    let(:legacy_settings) do
+      {
+        :pe_installer_conf_file => '/tmp/answers',
+        :pe_installer_conf_setting => '-a /tmp/answers',
+        :pe_installer_type => 'legacy',
+      }
+    end
+    let(:meep_settings) do
+      {
+        :pe_installer_conf_file => '/tmp/pe.conf',
+        :pe_installer_conf_setting => '-c /tmp/pe.conf',
+        :pe_installer_type => 'meep',
+      }
+    end
+    let(:installer_type) { nil }
+    let(:host) { unixhost }
+
+    before(:each) do
+      ENV['INSTALLER_TYPE'] = installer_type
+      host['pe_ver'] = pe_ver
+      subject.prepare_host_installer_options(host)
+    end
+
+    after(:each) do
+      ENV.delete('INSTALLER_TYPE')
+    end
+
+    def slice_installer_options(host)
+      host.select { |k,v| [ :pe_installer_conf_file, :pe_installer_conf_setting, :pe_installer_type].include?(k) }
+    end
+
+    context 'when version < 2016.2.0' do
+      let(:pe_ver) { '3.8.5' }
+
+      it 'sets legacy settings' do
+        expect(slice_installer_options(host)).to eq(legacy_settings)
+      end
+
+      context 'and ENV["INSTALLER"]=="meep"' do
+        let(:installer_type) { 'meep' }
+
+        it 'still sets legacy settings' do
+          expect(slice_installer_options(host)).to eq(legacy_settings)
+        end
+      end
+    end
+
+    context 'when version >= 2016.2.0' do
+      let (:pe_ver) { '2016.2.0' }
+
+      context 'and ENV["INSTALLER_TYPE"]=="legacy"' do
+        let(:installer_type) { 'legacy' }
+
+        it 'sets legacy settings' do
+          expect(slice_installer_options(host)).to eq(legacy_settings)
+        end
+      end
+
+      context 'and ENV["INSTALLER_TYPE"]=="meep"' do
+        let(:installer_type) { 'meep' }
+
+        it 'sets meep settings' do
+          expect(slice_installer_options(host)).to eq(meep_settings)
+        end
+      end
+    end
+  end
+
+  describe 'generate_installer_conf_file_for' do
+    let(:master) { hosts.first }
+
+    it 'generates a legacy answer file if host["pe_installer_type"]=="legacy"' do
+      master['pe_installer_conf_file'] = '/tmp/answers'
+      master['pe_installer_type'] = 'legacy'
+      expect(subject).to receive(:create_remote_file).with(
+        master,
+        '/tmp/answers',
+        %r{q_install=y.*q_puppetmaster_certname=#{master}}m
+      )
+      subject.generate_installer_conf_file_for(master, hosts, opts)
+    end
+
+    it 'generates a meep config file if host["pe_installer_type"]=="meep"' do
+      master['pe_installer_conf_file'] = '/tmp/pe.conf'
+      master['pe_installer_type'] = 'meep'
+      master['pe_ver'] = '2016.2.0'
+      expect(subject).to receive(:create_remote_file).with(
+        master,
+        '/tmp/pe.conf',
+        %r{\{.*"puppet_enterprise::puppet_master_host": "#{master.hostname}"}m
+      )
+      subject.generate_installer_conf_file_for(master, hosts, opts)
+    end
+  end
+
+  describe 'setup_beaker_answers_opts' do
+    let(:opts) { {} }
+    let(:host) { hosts.first }
+
+    context 'for legacy installer' do
+      it 'adds option for bash format' do
+        host['pe_installer_type'] = 'legacy'
+        expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+          opts.merge(
+            :format => :bash,
+            :include_legacy_database_defaults => false,
+          )
+        )
+      end
+    end
+
+    context 'for meep installer' do
+      before(:each) do
+        ENV['INSTALLER_TYPE'] = 'meep'
+        host['pe_ver'] = '2016.2.0'
+        host['pe_installer_type'] = 'meep'
+      end
+
+      after(:each) do
+        ENV.delete('INSTALLER_TYPE')
+      end
+
+      it 'adds option for hiera format' do
+        expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+          opts.merge(
+            :format => :hiera,
+            :include_legacy_database_defaults => false,
+          )
+        )
+      end
+
+      context 'when upgrading' do
+        let(:opts) { { :type => :upgrade } }
+
+        context 'from meep' do
+          it 'sets legacy password defaults false' do
+            host['pe_ver'] = '2016.2.1'
+            host['previous_pe_ver'] = '2016.2.0'
+            expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+              opts.merge(
+                :format => :hiera,
+                :include_legacy_database_defaults => false,
+              )
+            )
+          end
+        end
+
+        context 'from legacy' do
+          it 'sets legacy password defaults to true' do
+            host['previous_pe_ver'] = '3.8.5'
+            expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
+              opts.merge(
+                :format => :hiera,
+                :include_legacy_database_defaults => true,
+              )
+            )
+          end
+        end
+      end
+    end
+  end
 
   describe 'fetch_pe' do
 
@@ -295,7 +525,6 @@ describe ClassMixedWithDSLInstallUtils do
       end
       allow( subject ).to receive( :on ).and_return( true )
 
-      path = unixhost['pe_dir']
       filename = "#{ unixhost['dist'] }"
       extension = '.tar'
       expect( subject ).to receive( :fetch_and_push_pe ).with( unixhost, anything, filename, extension ).once
@@ -320,7 +549,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :link_exists? ).and_return( true ) #is a tar.gz
       allow( subject ).to receive( :on ).and_return( true )
 
-      path = unixhost['pe_dir']
       filename = "#{ unixhost['dist'] }"
       extension = '.tar.gz'
       expect( subject ).to receive( :fetch_and_push_pe ).with( unixhost, anything, filename, extension ).once
@@ -380,7 +608,6 @@ describe ClassMixedWithDSLInstallUtils do
 
       expect( subject).to_not receive(:scp_to)
       expect( subject).to_not receive(:on)
-      allow( subject ).to receive(:version_is_less).with('3.2.0', '3.2.0').and_return(false)
       subject.fetch_pe( [unixhost], {} )
     end
   end
@@ -394,13 +621,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :stop_agent_on ).and_return( true )
       allow( subject ).to receive( :sleep_until_puppetdb_started ).and_return( true )
       allow( subject ).to receive( :max_version ).with(anything, '3.8').and_return('3.0')
-      allow( subject ).to receive( :version_is_less ).with('3.0', '4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.99').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.99', '3.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '2016.1.0').and_return( false )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -438,7 +658,7 @@ describe ClassMixedWithDSLInstallUtils do
       expect( subject ).to receive( :stop_agent_on ).with( hosts[3] ).once
       # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
-      # Each puppet agent runs twice, once for the initial run, and once to configure mcollective
+      #run each puppet agent (also captures the final run below)
       expect( subject ).to receive( :on ).with( hosts[0], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       expect( subject ).to receive( :on ).with( hosts[1], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
       expect( subject ).to receive( :on ).with( hosts[2], /puppet agent -t/, :acceptable_exit_codes => [0,2] ).twice
@@ -446,6 +666,9 @@ describe ClassMixedWithDSLInstallUtils do
       #run rake task on dashboard
 
       expect( subject ).to receive( :on ).with( hosts[0], /\/opt\/puppet\/bin\/rake -sf \/opt\/puppet\/share\/puppet-dashboard\/Rakefile .* RAILS_ENV=production/ ).once
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # This is captured above (run each puppet agent)
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -468,9 +691,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :create_remote_file ).and_return( true )
       allow( subject ).to receive( :stop_agent_on ).and_return( true )
       allow( subject ).to receive( :max_version ).with(['3.0'], '3.8').and_return('3.0')
-      allow( subject ).to receive( :version_is_less ).with('3.99', '3.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with(anything, '3.2.0').exactly(hosts.length + 1).times.and_return( false )
-      allow( subject ).to receive( :version_is_less ).with(anything, '4.0').exactly(hosts.length + 1).times.and_return( true )
 
       expect( subject ).to receive( :on ).with( hosts[0], /puppet-enterprise-installer/ ).once
       expect( subject ).to receive( :create_remote_file ).with( hosts[0], /answers/, /q/ ).once
@@ -506,14 +726,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :stop_agent_on ).and_return( true )
       allow( subject ).to receive( :sleep_until_puppetdb_started ).and_return( true )
       allow( subject ).to receive( :max_version ).with(anything, '3.8').and_return('4.0')
-      allow( subject ).to receive( :version_is_less ).with('4.0', '4.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.4').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
-      # pe_ver is only set on the hosts for this test, not the opt
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -540,6 +752,9 @@ describe ClassMixedWithDSLInstallUtils do
       end
       # We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # tested above in the hosts loop ^^
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -568,15 +783,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :stop_agent_on ).and_return( true )
       allow( subject ).to receive( :sleep_until_puppetdb_started ).and_return( true )
       allow( subject ).to receive( :max_version ).with(anything, '3.8').and_return('4.0')
-      allow( subject ).to receive( :version_is_less ).with('4.0', '4.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.4').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
-      # pe_ver is only set on the hosts for this test, not the opt
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -602,6 +808,9 @@ describe ClassMixedWithDSLInstallUtils do
       end
       #  We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
       expect( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
+      #wait for all hosts to appear in the dashboard
+      #run puppet agent now that installation is complete
+      # tested above in the hosts loop ^^
 
       hosts.each do |host|
         allow( host ).to receive( :tmpdir )
@@ -613,6 +822,7 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'sets puppet-agent acceptable_exit_codes correctly for config helper on upgrade' do
       hosts = make_hosts({
+                           :previous_pe_ver => '3.0',
                            :pe_ver => '4.0',
                            :roles => ['agent'],
                          }, 2)
@@ -628,15 +838,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :stop_agent_on ).and_return( true )
       allow( subject ).to receive( :sleep_until_puppetdb_started ).and_return( true )
       allow( subject ).to receive( :max_version ).with(anything, '3.8').and_return('4.0')
-      allow( subject ).to receive( :version_is_less ).with('4.0', '4.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.4').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.0').and_return( false )
-      allow( subject ).to receive( :version_is_less ).with('3.99', '4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.8', '4.0').and_return( true )
-      # pe_ver is only set on the hosts for this test, not the opt
-      allow( subject ).to receive( :version_is_less ).with('4.0', '3.99').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('4.0', '2016.1.0').and_return( false )
-      allow( subject ).to receive( :check_puppetdb_status_endpoint ).and_return( nil )
       allow( subject ).to receive( :wait_for_host_in_dashboard ).and_return( true )
       allow( subject ).to receive( :puppet_agent ) do |arg|
         "puppet agent #{arg}"
@@ -783,9 +984,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('2.8', '3.0').and_return( true )
-      version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -800,9 +998,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.1', '3.0').and_return( false )
-      version = version_win = '3.1'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -817,9 +1012,6 @@ describe ClassMixedWithDSLInstallUtils do
       the_hosts = [ hosts[0].dup, hosts[1].dup, hosts[2].dup ]
       allow( subject ).to receive( :hosts ).and_return( the_hosts )
       allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('2.8', '3.0').and_return( true )
-      version = version_win = '2.8'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( the_hosts, {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe( path )
@@ -832,15 +1024,22 @@ describe ClassMixedWithDSLInstallUtils do
       allow( Beaker::Options::PEVersionScraper ).to receive( :load_pe_version ).and_return( '3.1' )
       allow( Beaker::Options::PEVersionScraper ).to receive( :load_pe_version_win ).and_return( '3.1' )
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :version_is_less ).with('3.0', '3.4.0').and_return( true )
-      allow( subject ).to receive( :version_is_less ).with('3.1', '3.0').and_return( false )
       allow( subject ).to receive( :sorted_hosts ).and_return( [hosts[0]] )
-      version = version_win = '3.1'
       path = "/path/to/upgradepkg"
       expect( subject ).to receive( :do_install ).with( [hosts[0]], {:type=>:upgrade, :set_console_password=>true} )
       subject.upgrade_pe_on(hosts[0], {}, path)
     end
 
+    it 'sets previous_pe_ver' do
+      subject.hosts = hosts
+      host = hosts[0]
+      host['pe_ver'] = '3.8.5'
+      host['pe_upgrade_ver'] = '2016.2.0'
+      expect(subject).to receive(:do_install).with([host], Hash)
+      subject.upgrade_pe_on([host], {})
+      expect(host['pe_ver']).to eq('2016.2.0')
+      expect(host['previous_pe_ver']).to eq('3.8.5')
+    end
   end
 
   describe 'fetch_and_push_pe' do
