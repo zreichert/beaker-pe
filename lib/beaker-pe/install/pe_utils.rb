@@ -519,7 +519,7 @@ module Beaker
         #
         # And then to just >= 2016.2.0 for cutover.
         def use_meep?(version)
-          !version_is_less(version, MEEP_CUTOVER_VERSION) && ENV['INSTALLER_TYPE'] == 'meep'
+          !version_is_less(version, MEEP_CUTOVER_VERSION) && ENV['INSTALLER_TYPE'] != 'legacy'
         end
 
         # Set installer options on the passed *host* according to current
