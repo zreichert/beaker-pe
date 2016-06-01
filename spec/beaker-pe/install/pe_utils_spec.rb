@@ -373,6 +373,13 @@ describe ClassMixedWithDSLInstallUtils do
         it 'sets legacy settings' do
           expect(slice_installer_options(host)).to eq(legacy_settings)
         end
+
+        it 'test use_meep?' do
+          expect(subject.use_meep?('3.8.5')).to eq(false)
+          expect(subject.use_meep?('2016.1.2')).to eq(false)
+          expect(subject.use_meep?('2016.2.0')).to eq(false)
+          expect(subject.use_meep?('2016.2.0-rc1-gabcdef')).to eq(false)
+        end
       end
 
       context 'and ENV["INSTALLER_TYPE"]=="meep"' do
@@ -380,6 +387,23 @@ describe ClassMixedWithDSLInstallUtils do
 
         it 'sets meep settings' do
           expect(slice_installer_options(host)).to eq(meep_settings)
+        end
+      end
+
+      context 'and ENV["INSTALLER_TYPE"] is not set' do
+        before(:each) do
+          ENV.delete('INSTALLER_TYPE')
+        end
+
+        it 'sets meep settings' do
+          expect(slice_installer_options(host)).to eq(meep_settings)
+        end
+
+        it 'test use_meep?' do
+          expect(subject.use_meep?('3.8.5')).to eq(false)
+          expect(subject.use_meep?('2016.1.2')).to eq(false)
+          expect(subject.use_meep?('2016.2.0')).to eq(true)
+          expect(subject.use_meep?('2016.2.0-rc1-gabcdef')).to eq(true)
         end
       end
     end
