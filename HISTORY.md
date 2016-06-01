@@ -1,13 +1,38 @@
 # default - History
 ## Tags
-* [LATEST - 26 May, 2016 (d58ed99e)](#LATEST)
+* [LATEST - 1 Jun, 2016 (e04b1f64)](#LATEST)
+* [0.3.0 - 26 May, 2016 (0d6b6d4c)](#0.3.0)
 * [0.2.0 - 18 May, 2016 (a65f2083)](#0.2.0)
 * [0.1.2 - 4 Apr, 2016 (a6fd7bef)](#0.1.2)
 * [0.1.1 - 4 Apr, 2016 (8203d928)](#0.1.1)
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 26 May, 2016 (d58ed99e)
+### <a name = "LATEST">LATEST - 1 Jun, 2016 (e04b1f64)
+
+* (GEM) update beaker-pe version to 0.4.0 (e04b1f64)
+
+* Merge pull request #9 from jpartlow/issue/master/pe-14554-switch-default-to-meep (c9eff0ea)
+
+
+```
+Merge pull request #9 from jpartlow/issue/master/pe-14554-switch-default-to-meep
+
+(PE-14554) Switch default to meep
+```
+* (PE-14554) Switch default to meep (f234e5fc)
+
+
+```
+(PE-14554) Switch default to meep
+
+If INSTALLER_TYPE is not set, beaker-pe will now default to a meep
+install.  You must set INSTALLER_TYPE to 'legacy' to get a legacy
+install out of Beaker with this patch.
+```
+### <a name = "0.3.0">0.3.0 - 26 May, 2016 (0d6b6d4c)
+
+* (HISTORY) update beaker-pe history for gem release 0.3.0 (0d6b6d4c)
 
 * (GEM) update beaker-pe version to 0.3.0 (d58ed99e)
 
