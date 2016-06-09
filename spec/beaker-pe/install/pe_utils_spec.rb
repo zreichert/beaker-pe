@@ -292,12 +292,7 @@ describe ClassMixedWithDSLInstallUtils do
       let(:higgs_answer) { '1' }
 
       before(:each) do
-        ENV['INSTALLER_TYPE'] = 'meep'
         host['pe_ver'] = '2016.2.0'
-      end
-
-      after(:each) do
-        ENV.delete('INSTALLER_TYPE')
       end
 
       context 'the higgs_installer_cmd' do
@@ -321,31 +316,23 @@ describe ClassMixedWithDSLInstallUtils do
       {
         :pe_installer_conf_file => '/tmp/answers',
         :pe_installer_conf_setting => '-a /tmp/answers',
-        :pe_installer_type => 'legacy',
       }
     end
     let(:meep_settings) do
       {
         :pe_installer_conf_file => '/tmp/pe.conf',
         :pe_installer_conf_setting => '-c /tmp/pe.conf',
-        :pe_installer_type => 'meep',
       }
     end
-    let(:installer_type) { nil }
     let(:host) { unixhost }
 
     before(:each) do
-      ENV['INSTALLER_TYPE'] = installer_type
       host['pe_ver'] = pe_ver
       subject.prepare_host_installer_options(host)
     end
 
-    after(:each) do
-      ENV.delete('INSTALLER_TYPE')
-    end
-
     def slice_installer_options(host)
-      host.select { |k,v| [ :pe_installer_conf_file, :pe_installer_conf_setting, :pe_installer_type].include?(k) }
+      host.select { |k,v| [ :pe_installer_conf_file, :pe_installer_conf_setting].include?(k) }
     end
 
     context 'when version < 2016.2.0' do
@@ -354,57 +341,20 @@ describe ClassMixedWithDSLInstallUtils do
       it 'sets legacy settings' do
         expect(slice_installer_options(host)).to eq(legacy_settings)
       end
-
-      context 'and ENV["INSTALLER"]=="meep"' do
-        let(:installer_type) { 'meep' }
-
-        it 'still sets legacy settings' do
-          expect(slice_installer_options(host)).to eq(legacy_settings)
-        end
-      end
     end
 
     context 'when version >= 2016.2.0' do
       let (:pe_ver) { '2016.2.0' }
 
-      context 'and ENV["INSTALLER_TYPE"]=="legacy"' do
-        let(:installer_type) { 'legacy' }
-
-        it 'sets legacy settings' do
-          expect(slice_installer_options(host)).to eq(legacy_settings)
-        end
-
-        it 'test use_meep?' do
-          expect(subject.use_meep?('3.8.5')).to eq(false)
-          expect(subject.use_meep?('2016.1.2')).to eq(false)
-          expect(subject.use_meep?('2016.2.0')).to eq(false)
-          expect(subject.use_meep?('2016.2.0-rc1-gabcdef')).to eq(false)
-        end
+      it 'test use_meep?' do
+        expect(subject.use_meep?('3.8.5')).to eq(false)
+        expect(subject.use_meep?('2016.1.2')).to eq(false)
+        expect(subject.use_meep?('2016.2.0')).to eq(true)
+        expect(subject.use_meep?('2016.2.0-rc1-gabcdef')).to eq(true)
       end
 
-      context 'and ENV["INSTALLER_TYPE"]=="meep"' do
-        let(:installer_type) { 'meep' }
-
-        it 'sets meep settings' do
-          expect(slice_installer_options(host)).to eq(meep_settings)
-        end
-      end
-
-      context 'and ENV["INSTALLER_TYPE"] is not set' do
-        before(:each) do
-          ENV.delete('INSTALLER_TYPE')
-        end
-
-        it 'sets meep settings' do
-          expect(slice_installer_options(host)).to eq(meep_settings)
-        end
-
-        it 'test use_meep?' do
-          expect(subject.use_meep?('3.8.5')).to eq(false)
-          expect(subject.use_meep?('2016.1.2')).to eq(false)
-          expect(subject.use_meep?('2016.2.0')).to eq(true)
-          expect(subject.use_meep?('2016.2.0-rc1-gabcdef')).to eq(true)
-        end
+      it 'sets meep settings' do
+        expect(slice_installer_options(host)).to eq(meep_settings)
       end
     end
   end
@@ -412,9 +362,8 @@ describe ClassMixedWithDSLInstallUtils do
   describe 'generate_installer_conf_file_for' do
     let(:master) { hosts.first }
 
-    it 'generates a legacy answer file if host["pe_installer_type"]=="legacy"' do
+    it 'generates a legacy answer file if < 2016.2.0' do
       master['pe_installer_conf_file'] = '/tmp/answers'
-      master['pe_installer_type'] = 'legacy'
       expect(subject).to receive(:create_remote_file).with(
         master,
         '/tmp/answers',
@@ -423,9 +372,8 @@ describe ClassMixedWithDSLInstallUtils do
       subject.generate_installer_conf_file_for(master, hosts, opts)
     end
 
-    it 'generates a meep config file if host["pe_installer_type"]=="meep"' do
+    it 'generates a meep config file if >= 2016.2.0' do
       master['pe_installer_conf_file'] = '/tmp/pe.conf'
-      master['pe_installer_type'] = 'meep'
       master['pe_ver'] = '2016.2.0'
       expect(subject).to receive(:create_remote_file).with(
         master,
@@ -442,7 +390,6 @@ describe ClassMixedWithDSLInstallUtils do
 
     context 'for legacy installer' do
       it 'adds option for bash format' do
-        host['pe_installer_type'] = 'legacy'
         expect(subject.setup_beaker_answers_opts(host, opts)).to eq(
           opts.merge(
             :format => :bash,
@@ -454,13 +401,7 @@ describe ClassMixedWithDSLInstallUtils do
 
     context 'for meep installer' do
       before(:each) do
-        ENV['INSTALLER_TYPE'] = 'meep'
         host['pe_ver'] = '2016.2.0'
-        host['pe_installer_type'] = 'meep'
-      end
-
-      after(:each) do
-        ENV.delete('INSTALLER_TYPE')
       end
 
       it 'adds option for hiera format' do
@@ -886,7 +827,7 @@ describe ClassMixedWithDSLInstallUtils do
         allow( subject ).to receive( :on ).with( host, /puppet agent -t/, :acceptable_exit_codes => [0,2] )
       end
       #  We wait for puppetdb to restart 3 times; once before the first puppet run, and then during each puppet run
-      allow( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times 
+      allow( subject ).to receive( :sleep_until_puppetdb_started ).with( hosts[0] ).exactly(3).times
       #run puppet agent now that installation is complete
       allow( subject ).to receive( :on ).with( hosts, /puppet agent/, :acceptable_exit_codes => [0,2] ).twice
 

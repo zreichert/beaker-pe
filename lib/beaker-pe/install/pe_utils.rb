@@ -511,24 +511,17 @@ module Beaker
           end
         end
 
-        # True if version is greater than or equal to 2016.2.0 and the
-        # INSTALLER_TYPE environment variable is 'meep'.
-        #
-        # This will be switched to be true if >= 2016.2.0 and INSTALLER_TYPE !=
-        # 'legacy' once meep is default.
-        #
-        # And then to just >= 2016.2.0 for cutover.
+        # True if version is greater than or equal to MEEP_CUTOVER_VERSION (2016.2.0)
         def use_meep?(version)
-          !version_is_less(version, MEEP_CUTOVER_VERSION) && ENV['INSTALLER_TYPE'] != 'legacy'
+          !version_is_less(version, MEEP_CUTOVER_VERSION)
         end
 
         # Set installer options on the passed *host* according to current
-        # version and external INSTALLER_TYPE setting.
+        # version.
         #
         # Sets:
         #   * 'pe_installer_conf_file'
         #   * 'pe_installer_conf_setting'
-        #   * 'pe_installer_type'
         #
         # @param [Beaker::Host] host The host object to configure
         # @return [Beaker::Host] The same host object passed in
@@ -537,12 +530,10 @@ module Beaker
             conf_file = "#{host['working_dir']}/pe.conf"
             host['pe_installer_conf_file'] = conf_file
             host['pe_installer_conf_setting'] = "-c #{conf_file}"
-            host['pe_installer_type'] = 'meep'
           else
             conf_file = "#{host['working_dir']}/answers"
             host['pe_installer_conf_file'] = conf_file
             host['pe_installer_conf_setting'] = "-a #{conf_file}"
-            host['pe_installer_type'] = 'legacy'
           end
           host
         end
@@ -559,7 +550,7 @@ module Beaker
         # @param [Hash] opts The Beaker options hash
         # @return [Hash] a dup of the opts hash with additional settings for BeakerAnswers
         def setup_beaker_answers_opts(host, opts)
-          beaker_answers_opts = host['pe_installer_type'] == 'meep' ?
+          beaker_answers_opts = use_meep?(host['pe_ver']) ?
             { :format => :hiera } :
             { :format => :bash }
 
@@ -574,9 +565,8 @@ module Beaker
         # installation.
         #
         # Expects the host['pe_installer_conf_file'] to have been set, which is
-        # where the configuration will be written to, and expects
-        # host['pe_installer_type'] to have been set to either 'legacy' or
-        # 'meep'.
+        # where the configuration will be written to, and will run MEEP or legacy
+        # depending on host[:pe_ver]
         #
         # @param [Beaker::Host] host The host to create a configuration file on
         # @param [Array<Beaker::Host]> hosts All of the hosts to be configured
@@ -776,7 +766,7 @@ module Beaker
         #                    The host object must have the 'working_dir', 'dist' and 'pe_installer' field set correctly.
         # @api private
         def higgs_installer_cmd host
-          higgs_answer = host['pe_installer_type'] == 'meep' ? '1' : 'Y'
+          higgs_answer = use_meep?(host['pe_ver']) ? '1' : 'Y'
           "cd #{host['working_dir']}/#{host['dist']} ; nohup ./#{host['pe_installer']} <<<#{higgs_answer} > #{host['higgs_file']} 2>&1 &"
         end
 
