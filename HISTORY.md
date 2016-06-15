@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 1 Jun, 2016 (e04b1f64)](#LATEST)
+* [LATEST - 15 Jun, 2016 (985fe231)](#LATEST)
+* [0.4.0 - 1 Jun, 2016 (f5ad1884)](#0.4.0)
 * [0.3.0 - 26 May, 2016 (0d6b6d4c)](#0.3.0)
 * [0.2.0 - 18 May, 2016 (a65f2083)](#0.2.0)
 * [0.1.2 - 4 Apr, 2016 (a6fd7bef)](#0.1.2)
@@ -8,7 +9,36 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 1 Jun, 2016 (e04b1f64)
+### <a name = "LATEST">LATEST - 15 Jun, 2016 (985fe231)
+
+* (GEM) update beaker-pe version to 0.5.0 (985fe231)
+
+* Merge pull request #11 from highb/cutover/pe-14555 (1b21288a)
+
+
+```
+Merge pull request #11 from highb/cutover/pe-14555
+
+(PE-14555) Always use MEEP for >= 2016.2.0
+```
+* (PE-14555) Always use MEEP for >= 2016.2.0 (de3a5050)
+
+
+```
+(PE-14555) Always use MEEP for >= 2016.2.0
+
+Prior to this commit pe-beaker would use `INSTALLER_TYPE` to
+specify whether to run a MEEP (new) or legacy install.
+This commit changes pe-beaker to always use MEEP if the PE
+version being installed is >= 2016.2.0, and legacy otherwise.
+
+No ENV parameters will be passed to specify which to use, as we
+are now relying on the installer itself to default to using MEEP
+by default in all 2016.2.0 builds going forward.
+```
+### <a name = "0.4.0">0.4.0 - 1 Jun, 2016 (f5ad1884)
+
+* (HISTORY) update beaker-pe history for gem release 0.4.0 (f5ad1884)
 
 * (GEM) update beaker-pe version to 0.4.0 (e04b1f64)
 
