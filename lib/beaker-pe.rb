@@ -2,12 +2,18 @@ require 'stringify-hash'
 require 'beaker-pe/version'
 require 'beaker-pe/install/pe_utils'
 require 'beaker-pe/options/pe_version_scraper'
+require 'beaker-pe/pe-client-tools/config_file_helper'
+require 'beaker-pe/pe-client-tools/install_helper'
+require 'beaker-pe/pe-client-tools/executable_helper'
 
 module Beaker
   module DSL
     module PE
       include Beaker::DSL::InstallUtils::PEUtils
       include Beaker::Options::PEVersionScraper
+      include PEClientTools::InstallHelper
+      include PEClientTools::ConfigFileHelper
+      include PEClientTools::ExecutableHelper
     end
   end
 end
