@@ -110,14 +110,14 @@ module Beaker
           else
             pe_debug = host[:pe_debug] || opts[:pe_debug]  ? ' -D' : ''
             pe_cmd = "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug}"
-            if ! version_is_less(host['pe_ver'], '2016.2.1') && !(opts[:type] == :upgrade && version_is_less(host['pe_upgrade_ver'], '2016.2.1') )
+            if ! version_is_less(host['pe_ver'], '2016.2.1')
               # -f option forces non-interactive mode
               pe_cmd += " -f"
             end
 
             # If there are no answer overrides, and we are doing an upgrade from 2016.2.0,
             # we can assume there will be a valid pe.conf in /etc that we can re-use.
-            if opts[:answers].nil? && opts[:custom_answers].nil? && opts[:type] == :upgrade && !version_is_less(host['pe_ver'], '2016.2.0')
+            if opts[:answers].nil? && opts[:custom_answers].nil? && opts[:type] == :upgrade && !version_is_less(opts[:HOSTS][host.name][:pe_ver], '2016.2.0')
               "#{pe_cmd}"
             else
               "#{pe_cmd} #{host['pe_installer_conf_setting']}"
