@@ -38,14 +38,14 @@ module Beaker
 
             if host.platform =~ /win/i
 
-              program_files = host.exec(Beaker::Command.new('echo', ['%PROGRAMFILES%'], :cmdexe => true)).stdout.chomp.gsub('\\', '\\\\\\')
-              client_tools_dir = "#{program_files}\\\\#{['Puppet Labs', 'Client', 'tools', 'bin'].join('\\\\')}\\\\"
-              tool_executable = '""' << "#{client_tools_dir}puppet-#{tool.to_s}.exe" << '""'
+              program_files = host.exec(Beaker::Command.new('echo', ['%PROGRAMFILES%'], :cmdexe => true)).stdout.chomp
+              client_tools_dir = "#{program_files}\\#{['Puppet Labs', 'Client', 'tools', 'bin'].join('\\')}\\"
+              tool_executable = "\"#{client_tools_dir}puppet-#{tool.to_s}.exe\""
 
               #TODO does this need to be more detailed to pass exit codes????
               # TODO make batch file direct output to separate file
               batch_contents =<<-EOS
-#{tool_executable} #{args.join}
+call #{tool_executable} #{args.join}
               EOS
 
               @command = build_win_batch_command( host, batch_contents, options)
@@ -75,7 +75,7 @@ module Beaker
             timestamp = Time.new.strftime('%Y-%m-%d_%H.%M.%S')
             # Create Temp file
             # make file fully qualified
-            batch_file = "#{host.system_temp_path}#{timestamp}.bat"
+            batch_file = "#{host.system_temp_path}\\#{timestamp}.bat"
             create_remote_file(host, batch_file, batch_contents)
             Beaker::Command.new("\"#{batch_file}\"", [], command_options)
           end
