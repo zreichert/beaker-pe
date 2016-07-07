@@ -19,6 +19,13 @@ module Beaker
           Private.new.tool(:app, *args, &block)
         end
 
+        def puppet_db_on(*args, &block)
+          Private.new.tool(:db, *args, &block)
+        end
+
+        def puppet_query_on(*args, &block)
+          Private.new.tool(:query, *args, &block)
+        end
 
         class Private
 

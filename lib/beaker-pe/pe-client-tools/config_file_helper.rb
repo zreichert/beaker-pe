@@ -18,12 +18,14 @@ module Beaker
           extend Beaker::DSL::Patterns
 
           def self.file_name(tool)
-            if tool =~ /orchestrator/i
-              'orchestrator.conf'
-            elsif tool =~ /puppet.code/i
+            if tool =~ /orchestrator|job|app/i
+              'puppet-orchestrator.conf'
+            elsif tool =~ /code/i
               'puppet-code.conf'
-            elsif tool =~ /puppet.access/i
+            elsif tool =~ /access/i
               'puppet-access.conf'
+            elsif tool =~ /db|query/i
+              'puppetdb.conf'
             else
               raise ArgumentError.new("Unknown pe-client-tool type '#{tool}'")
             end
