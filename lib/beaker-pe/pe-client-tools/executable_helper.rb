@@ -52,7 +52,7 @@ module Beaker
               #TODO does this need to be more detailed to pass exit codes????
               # TODO make batch file direct output to separate file
               batch_contents =<<-EOS
-call #{tool_executable} #{args.join}
+call #{tool_executable} #{args.join(' ')}
               EOS
 
               @command = build_win_batch_command( host, batch_contents, options)
