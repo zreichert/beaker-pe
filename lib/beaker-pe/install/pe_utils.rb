@@ -111,8 +111,8 @@ module Beaker
             pe_debug = host[:pe_debug] || opts[:pe_debug]  ? ' -D' : ''
             pe_cmd = "cd #{host['working_dir']}/#{host['dist']} && ./#{host['pe_installer']}#{pe_debug}"
             if ! version_is_less(host['pe_ver'], '2016.2.1')
-              # -f option forces non-interactive mode
-              pe_cmd += " -f"
+              # -y option sets "assume yes" mode where yes or whatever default will be assumed
+              pe_cmd += " -y"
             end
 
             # If there are no answer overrides, and we are doing an upgrade from 2016.2.0,
