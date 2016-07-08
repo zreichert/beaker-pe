@@ -48,12 +48,12 @@ module Beaker
             end
 
             client_tools_dir = client_tools_path_array.unshift(@base_path).join(path_separator(host))
-            opts = {:cmdexe => true, :accept_all_exit_codes => true}
+            opts = {:cmdexe => true}
 
             if host.platform =~ /win/
-              host.exec(Beaker::Command.new('MD', [client_tools_dir.gsub('\\', '\\\\\\')], opts))
+              host.exec(Beaker::Command.new('MD', [client_tools_dir.gsub('\\', '\\\\\\')], opts), :accept_all_exit_codes => true)
             else
-              host.exec(Beaker::Command.new("mkdir -p #{client_tools_dir}", [], opts))
+              host.exec(Beaker::Command.new("mkdir -p #{client_tools_dir}", [], opts), :accept_all_exit_codes => true)
             end
             client_tools_dir
           end
