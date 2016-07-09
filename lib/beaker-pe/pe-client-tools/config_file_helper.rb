@@ -3,7 +3,12 @@ module Beaker
     module PEClientTools
       module ConfigFileHelper
 
-        def write_config_on(host, config_level, tool, contents)
+        # Helper method to write config files for pe-client-tools
+        # @param [Beaker::Host] host The beaker host that gets the config file
+        # @param [String] config_level 'user' or 'global'
+        # @param [String] tool 'access', 'code', 'db', 'query', 'orchestrator', 'job', 'app'
+        # @param [String] contents The contents of the config file
+        def write_client_tool_config_on(host, config_level, tool, contents)
 
           # TODO take a hash and parse file or take literal string
 
