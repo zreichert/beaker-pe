@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 15 Jun, 2016 (985fe231)](#LATEST)
+* [LATEST - 11 Jul, 2016 (48b663eb)](#LATEST)
+* [0.5.0 - 15 Jun, 2016 (8f2874fe)](#0.5.0)
 * [0.4.0 - 1 Jun, 2016 (f5ad1884)](#0.4.0)
 * [0.3.0 - 26 May, 2016 (0d6b6d4c)](#0.3.0)
 * [0.2.0 - 18 May, 2016 (a65f2083)](#0.2.0)
@@ -9,7 +10,39 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 15 Jun, 2016 (985fe231)
+### <a name = "LATEST">LATEST - 11 Jul, 2016 (48b663eb)
+
+* (GEM) update beaker-pe version to 0.6.0 (48b663eb)
+
+* Merge pull request #14 from ericwilliamson/task/master/PE-16566-download-gpg-key (99c5008f)
+
+
+```
+Merge pull request #14 from ericwilliamson/task/master/PE-16566-download-gpg-key
+
+(PE-16566) Add method to download life support gpg key
+```
+* (PE-16566) Add method to download life support gpg key (df1f14bf)
+
+
+```
+(PE-16566) Add method to download life support gpg key
+
+As of July 8th, 2016 the GPG key that was shipped with and used to sign
+repos inside of PE tarballs expired. A new life support key was created
+that extended the expiration date to Jan 2017. That key shipped with PE
+3.8.5 and 2016.1.2.
+
+apt based platforms appear to be the only package manager failing due to
+an expired key, while rpm is fine.
+
+This commit adds a new helper method to additionally download and
+install the extended key for PE versions that have already been released
+and are needing to be tested.
+```
+### <a name = "0.5.0">0.5.0 - 15 Jun, 2016 (8f2874fe)
+
+* (HISTORY) update beaker-pe history for gem release 0.5.0 (8f2874fe)
 
 * (GEM) update beaker-pe version to 0.5.0 (985fe231)
 
