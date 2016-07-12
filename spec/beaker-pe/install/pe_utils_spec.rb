@@ -444,6 +444,79 @@ describe ClassMixedWithDSLInstallUtils do
     end
   end
 
+  describe 'add_extended_gpg_key_to_hosts' do
+    let(:on_cmd) { 'curl http://apt.puppetlabs.com/pubkey.gpg | apt-key add -' }
+    let(:deb_host) do
+      host = hosts.first
+      host['platform'] = 'debian'
+      host
+    end
+
+    context 'mixed platforms' do
+      before(:each) do
+        hosts[0]['platform'] = 'centos'
+        hosts[1]['platform'] = 'debian'
+        hosts[2]['platform'] = 'ubuntu'
+      end
+
+      it 'does nothing on el platforms' do
+        expect(subject).not_to receive(:on).with(hosts[0], on_cmd)
+        subject.add_extended_gpg_key_to_hosts(hosts, opts)
+      end
+
+      it 'installs key on debian based platforms' do
+        expect(subject).to receive(:on).with(hosts[1], on_cmd)
+        expect(subject).to receive(:on).with(hosts[2], on_cmd)
+        subject.add_extended_gpg_key_to_hosts(hosts, opts)
+      end
+    end
+
+    context 'mixed pe_versions' do
+      before(:each) do
+        hosts[0]['platform'] = 'debian'
+        hosts[0]['pe_ver'] = '2016.2.0'
+        hosts[1]['platform'] = 'debian'
+        hosts[1]['pe_ver'] = '3.8.4'
+      end
+
+      it 'adds key to required hosts' do
+        expect(subject).not_to receive(:on).with(hosts[0], on_cmd)
+        expect(subject).to receive(:on).with(hosts[1], on_cmd)
+        subject.add_extended_gpg_key_to_hosts(hosts, opts)
+      end
+    end
+
+    context 'PE versions earlier than 3.8.5' do
+      ['3.3.2', '3.7.3', '3.8.2'].each do |pe_ver|
+        it "Adds key on PE #{pe_ver}" do
+          deb_host['pe_ver'] = pe_ver
+          expect(subject).to receive(:on).with(deb_host, on_cmd)
+          subject.add_extended_gpg_key_to_hosts(hosts, opts)
+        end
+      end
+    end
+
+    context 'PE versions between 2015.2.0 and 2016.1.1' do
+      ['2015.2.0', '2015.3.1', '2016.1.1'].each do |pe_ver|
+        it "Adds key on PE #{pe_ver}" do
+          deb_host['pe_ver'] = pe_ver
+          expect(subject).to receive(:on).with(deb_host, on_cmd)
+          subject.add_extended_gpg_key_to_hosts(hosts, opts)
+        end
+      end
+    end
+
+    ['3.8.5', '3.8.6', '2016.1.2', '2016.2.0'].each do |pe_ver|
+      context "PE #{pe_ver}" do
+        it 'does nothing' do
+          deb_host['pe_ver'] = pe_ver
+          expect(subject).not_to receive(:on).with(deb_host, on_cmd)
+          subject.add_extended_gpg_key_to_hosts(hosts, opts)
+        end
+      end
+    end
+  end
+
   describe 'fetch_pe' do
 
     it 'can push a local PE .tar.gz to a host and unpack it' do
