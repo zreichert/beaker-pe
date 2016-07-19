@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 11 Jul, 2016 (48b663eb)](#LATEST)
+* [LATEST - 19 Jul, 2016 (f31dbe09)](#LATEST)
+* [0.6.0 - 11 Jul, 2016 (e974e7f8)](#0.6.0)
 * [0.5.0 - 15 Jun, 2016 (8f2874fe)](#0.5.0)
 * [0.4.0 - 1 Jun, 2016 (f5ad1884)](#0.4.0)
 * [0.3.0 - 26 May, 2016 (0d6b6d4c)](#0.3.0)
@@ -10,7 +11,66 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 11 Jul, 2016 (48b663eb)
+### <a name = "LATEST">LATEST - 19 Jul, 2016 (f31dbe09)
+
+* (GEM) update beaker-pe version to 0.7.0 (f31dbe09)
+
+* Merge pull request #12 from highb/feature/pe-15351_non_interactive_flag_on_installer (5062ede4)
+
+
+```
+Merge pull request #12 from highb/feature/pe-15351_non_interactive_flag_on_installer
+
+(PE-15351) Use -y option for 2016.2.1+ installs
+```
+* (PE-15351) Change -f option to -y (d86f4cde)
+
+
+```
+(PE-15351) Change -f option to -y
+
+Prior to this commit I was using the `-f` option in the installer,
+now it is `-y`. For more information, see
+https://github.com/puppetlabs/pe-installer-shim/pull/31/commits/0dfd6eb488456a7177673bb720edf9758521f096
+```
+* (PE-15351) Fix use of -c/-f flags on upgrades (33cdfef0)
+
+
+```
+(PE-15351) Fix use of -c/-f flags on upgrades
+
+Prior to this commit the condition used to decide whether to use
+the `-c`/`-f` flags was dependent on `host['pe_upgrade_ver']` and
+`host['pe_ver']` which was an unreliable condition.
+This commit updates the condition to determine whether to use the
+`-f` flag to simply look at `host['pe_ver']` because that value
+is updated depending on what version of pe is currently being
+installed or upgraded to.
+The condition to decide to omit the `-c` flag has to depend on
+`opts[:HOSTS][host.name][:pe_ver]` because that value is not
+modified during upgrade and can be used for a valid comparison
+to determine if the install will have a `pe.conf` file to use
+for an upgrade.
+```
+* (PE-15351) Use -f option for 2016.2.1+ installs (9372dc29)
+
+
+```
+(PE-15351) Use -f option for 2016.2.1+ installs
+
+Prior to this commit there was not an option for signalling a
+non-interactive install to the installer.
+This commit adds the new `-f` option added in
+https://github.com/puppetlabs/pe-installer-shim/pull/31 to the
+command line options for installation/upgrade.
+
+Additionally, this commit will remove the `-c` parameter being
+passed on upgrades from a 2016.2.0+ install, because the installer
+should be able to pick up on the existing pe.conf file.
+```
+### <a name = "0.6.0">0.6.0 - 11 Jul, 2016 (e974e7f8)
+
+* (HISTORY) update beaker-pe history for gem release 0.6.0 (e974e7f8)
 
 * (GEM) update beaker-pe version to 0.6.0 (48b663eb)
 
