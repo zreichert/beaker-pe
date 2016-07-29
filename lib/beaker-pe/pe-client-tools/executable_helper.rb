@@ -1,3 +1,7 @@
+require "beaker/dsl/patterns"
+require "beaker/dsl/helpers"
+require "beaker/dsl/wrappers"
+
 module Beaker
   module DSL
     module PEClientTools
