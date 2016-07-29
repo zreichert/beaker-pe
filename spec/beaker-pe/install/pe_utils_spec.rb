@@ -866,6 +866,10 @@ describe ClassMixedWithDSLInstallUtils do
                          }, 2)
       hosts[0][:roles] = ['master', 'database', 'dashboard']
       hosts[1][:platform] = Beaker::Platform.new('el-6-x86_64')
+      opts[:HOSTS] = {}
+      hosts.each do |host|
+        opts[:HOSTS][host.name] = host
+      end
 
       allow( subject ).to receive( :hosts ).and_return( hosts )
       allow( subject ).to receive( :options ).and_return(Beaker::Options::Presets.new.presets)
