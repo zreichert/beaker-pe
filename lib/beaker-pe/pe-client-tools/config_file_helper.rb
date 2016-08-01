@@ -1,3 +1,5 @@
+require "beaker/dsl/patterns"
+
 module Beaker
   module DSL
     module PEClientTools
@@ -18,6 +20,8 @@ module Beaker
 
 
         class Private
+
+          require 'beaker/dsl/patterns'
 
           extend Beaker::DSL
           extend Beaker::DSL::Patterns
