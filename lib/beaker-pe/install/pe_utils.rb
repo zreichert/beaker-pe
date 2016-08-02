@@ -3,6 +3,7 @@
 end
 require "beaker-answers"
 require "timeout"
+require "json"
 module Beaker
   module DSL
     module InstallUtils
@@ -494,6 +495,9 @@ module Beaker
                   sleep_until_puppetdb_started(database)
                   check_puppetdb_status_endpoint(database)
                 end
+                if host == dashboard
+                  check_console_status_endpoint(host)
+                end
               end
             end
 
@@ -522,6 +526,9 @@ module Beaker
                 if host == database && ! pre30database
                   sleep_until_puppetdb_started(database)
                   check_puppetdb_status_endpoint(database)
+                end
+                if host == dashboard
+                  check_console_status_endpoint(host)
                 end
               end
             end
@@ -693,6 +700,25 @@ module Beaker
           end
         rescue Timeout::Error
           fail_test "PuppetDB took too long to start"
+        end
+
+        def check_console_status_endpoint(host)
+          if version_is_less(host['pe_ver'], '2015.2.0')
+            return true
+          end
+          Timeout.timeout(60) do
+            match = nil
+            while not match
+              output = on(host, "curl -s -k https://localhost:4433/status/v1/services --cert /etc/puppetlabs/puppet/ssl/certs/#{host}.pem --key /etc/puppetlabs/puppet/ssl/private_keys/#{host}.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem", :accept_all_exit_codes => true)
+              output = JSON.parse(output.stdout)
+              match = output['classifier-service']['state'] == 'running'
+              match = match && output['rbac-service']['state'] == 'running'
+              match = match && output['activity-service']['state'] == 'running'
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          fail_test "Console services took too long to start"
         end
 
         #Install PE based upon host configuration and options
