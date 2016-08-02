@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 19 Jul, 2016 (f31dbe09)](#LATEST)
+* [LATEST - 2 Aug, 2016 (f4d290f2)](#LATEST)
+* [0.7.0 - 19 Jul, 2016 (8256c0ac)](#0.7.0)
 * [0.6.0 - 11 Jul, 2016 (e974e7f8)](#0.6.0)
 * [0.5.0 - 15 Jun, 2016 (8f2874fe)](#0.5.0)
 * [0.4.0 - 1 Jun, 2016 (f5ad1884)](#0.4.0)
@@ -11,7 +12,90 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 19 Jul, 2016 (f31dbe09)
+### <a name = "LATEST">LATEST - 2 Aug, 2016 (f4d290f2)
+
+* (GEM) update beaker-pe version to 0.8.0 (f4d290f2)
+
+* (QA-2514) PE-client-tools helpers (#15) (32d70efe)
+
+
+```
+(QA-2514) PE-client-tools helpers (#15)
+
+* (QA-2514) PE-client-tools helpers
+
+* (maint) Add install helpers for pe-client-tools
+
+This commit adds three helper methods to install pe-client-tools on Windows.
+
+The first is a general  method that is designed to abstract
+away the installation of pe-client-tools on supported operating systems.
+Currently, it only accommodates development builds of the tools based on the
+provided SHA and SUITE_VERSION environment variables available.
+
+The second is a generic method to install an msi package on a target host.
+Beaker's built in method of this name assumes that msi installed involves the
+installation of puppet, so this method overrides that one without such an
+assumption.
+
+The this is a generic method to install a dmg package on a target host.
+Beaker's built in `install_package` method for osx does not accommodate for an
+installer `pkg` file that is named differently from the containing `dmg`. This
+method forces the user to supply both names explicitly.
+
+* (maint) Remove install helpers for pe-client-tools
+
+This commit removes the dmg and msi helper methods instroduced earlier.
+
+These two methods have bee moved into beaker.
+
+* basic spec tests for ExecutableHelper & ConfigFileHelper
+```
+* Merge pull request #18 from demophoon/fix/master/pe-16886-pe-console-service-wait (949852c8)
+
+
+```
+Merge pull request #18 from demophoon/fix/master/pe-16886-pe-console-service-wait
+
+(PE-16886) Add wait for console to be functional before continuing with puppet agent runs
+```
+* Merge pull request #17 from johnduarte/fix-install-pe_utils_spec (187a413a)
+
+
+```
+Merge pull request #17 from johnduarte/fix-install-pe_utils_spec
+
+(MAINT) Fix install/pe_utils spec test
+```
+* (PE-16886) Add wait for console to be functional (eef0f254)
+
+
+```
+(PE-16886) Add wait for console to be functional
+
+Before this commit the console may or may not be functional by the time
+the next puppet agent run occurs on the following node. This can cause
+puppetserver to return with an error from the classifier when it is
+attempting to evaluate the classes which should be applied to the node.
+
+This commit adds in a sleep and service check to the final agent run
+step on the console node which will hopefully work around this issue
+until it is fixed in SERVER-1237.
+```
+* (MAINT) Fix install/pe_utils spec test (5ca075ca)
+
+
+```
+(MAINT) Fix install/pe_utils spec test
+
+Changes introduced at commit 33cdfef caused the install/pe_utils
+spec test to fail. This commit updates the spec test to introduce
+the `opts[:HOSTS]` data that the implementation code expects to have
+available.
+```
+### <a name = "0.7.0">0.7.0 - 19 Jul, 2016 (8256c0ac)
+
+* (HISTORY) update beaker-pe history for gem release 0.7.0 (8256c0ac)
 
 * (GEM) update beaker-pe version to 0.7.0 (f31dbe09)
 
