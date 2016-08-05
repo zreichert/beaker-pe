@@ -434,7 +434,8 @@ module Beaker
 
             if agent_only_check_needed && hosts_agent_only.include?(host) || is_windows_msi_and_aio
               host['type'] = 'aio'
-              install_puppet_agent_pe_promoted_repo_on(host, { :puppet_agent_version => host[:puppet_agent_version] || opts[:puppet_agent_version],
+              puppet_agent_version = get_puppet_agent_version(host, opts)
+              install_puppet_agent_pe_promoted_repo_on(host, { :puppet_agent_version => puppet_agent_version,
                                                                :puppet_agent_sha => host[:puppet_agent_sha] || opts[:puppet_agent_sha],
                                                                :pe_ver => host[:pe_ver] || opts[:pe_ver],
                                                                :puppet_collection => host[:puppet_collection] || opts[:puppet_collection] })
@@ -556,6 +557,33 @@ module Beaker
               end
             end
           end
+        end
+
+        # Gets the puppet-agent version, hopefully from the host or local options.
+        # Will fall back to reading the `aio_agent_build` property on the master
+        # if neither of those two options are passed
+        #
+        # @note This method does have a side-effect: if it reads the
+        #   `aio_agent_build` property from master, it will store it in the local
+        #   options hash so that it won't have to do this more than once.
+        #
+        # @param [Beaker::Host] host Host to get puppet-agent for
+        # @param [Hash{Symbol=>String}] local_options local method options hash
+        #
+        # @return [String] puppet-agent version to install
+        def get_puppet_agent_version(host, local_options={})
+          puppet_agent_version = host[:puppet_agent_version] || local_options[:puppet_agent_version]
+          return puppet_agent_version if puppet_agent_version
+          # we can query the master because do_install is called passing
+          # the {#sorted_hosts}, so we know the master will be installed
+          # before the agents
+          facts_result = on(master, 'puppet facts')
+          facts_hash = JSON.parse(facts_result.stdout.chomp)
+          puppet_agent_version = facts_hash['values']['aio_agent_build']
+          logger.warn("No :puppet_agent_version in host #{host} or local options. Read puppet-agent version #{puppet_agent_version} from master")
+          # saving so that we don't have to query the master more than once
+          local_options[:puppet_agent_version] = puppet_agent_version
+          puppet_agent_version
         end
 
         # True if version is greater than or equal to MEEP_CUTOVER_VERSION (2016.2.0)
