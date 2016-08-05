@@ -1297,6 +1297,7 @@ describe ClassMixedWithDSLInstallUtils do
       expect(subject).to receive(:fail_test)
       subject.check_console_status_endpoint({})
     end
+  end
 
   describe '#get_puppet_agent_version' do
 
@@ -1338,5 +1339,4 @@ describe ClassMixedWithDSLInstallUtils do
       end
     end
   end
-
 end

@@ -386,39 +386,7 @@ module Beaker
           add_extended_gpg_key_to_hosts(hosts, opts)
 
           # Set PE distribution for all the hosts, create working dir
-          use_all_tar = ENV['PE_USE_ALL_TAR'] == 'true'
-          hosts.each do |host|
-            next if agent_only_check_needed && hosts_agent_only.include?(host)
-            host['pe_installer'] ||= 'puppet-enterprise-installer'
-            if host['platform'] !~ /windows|osx/
-              platform = use_all_tar ? 'all' : host['platform']
-              version = host['pe_ver'] || opts[:pe_ver]
-              host['dist'] = "puppet-enterprise-#{version}-#{platform}"
-            elsif host['platform'] =~ /osx/
-              version = host['pe_ver'] || opts[:pe_ver]
-              host['dist'] = "puppet-enterprise-#{version}-#{host['platform']}"
-            elsif host['platform'] =~ /windows/
-              version = host[:pe_ver] || opts['pe_ver_win']
-              is_config_32 = true == (host['ruby_arch'] == 'x86') || host['install_32'] || opts['install_32']
-              should_install_64bit = !(version_is_less(version, '3.4')) && host.is_x86_64? && !is_config_32
-              #only install 64bit builds if
-              # - we are on pe version 3.4+
-              # - we do not have install_32 set on host
-              # - we do not have install_32 set globally
-              if !(version_is_less(version, '3.99'))
-                if should_install_64bit
-                  host['dist'] = "puppet-agent-#{version}-x64"
-                else
-                  host['dist'] = "puppet-agent-#{version}-x86"
-                end
-              elsif should_install_64bit
-                host['dist'] = "puppet-enterprise-#{version}-x64"
-              else
-                host['dist'] = "puppet-enterprise-#{version}"
-              end
-            end
-            host['working_dir'] = host.tmpdir(Time.new.strftime("%Y-%m-%d_%H.%M.%S"))
-          end
+          prepare_hosts(hosts_not_agent_only, opts)
 
           fetch_pe(hosts_not_agent_only, opts)
 
@@ -434,11 +402,12 @@ module Beaker
 
             if agent_only_check_needed && hosts_agent_only.include?(host) || is_windows_msi_and_aio
               host['type'] = 'aio'
-              puppet_agent_version = get_puppet_agent_version(host, opts)
-              install_puppet_agent_pe_promoted_repo_on(host, { :puppet_agent_version => puppet_agent_version,
-                                                               :puppet_agent_sha => host[:puppet_agent_sha] || opts[:puppet_agent_sha],
-                                                               :pe_ver => host[:pe_ver] || opts[:pe_ver],
-                                                               :puppet_collection => host[:puppet_collection] || opts[:puppet_collection] })
+              install_puppet_agent_pe_promoted_repo_on(host, {
+                :puppet_agent_version => get_puppet_agent_version(host, opts),
+                :puppet_agent_sha => host[:puppet_agent_sha] || opts[:puppet_agent_sha],
+                :pe_ver => host[:pe_ver] || opts[:pe_ver],
+                :puppet_collection => host[:puppet_collection] || opts[:puppet_collection]
+              })
               # 1 since no certificate found and waitforcert disabled
               acceptable_exit_codes = [0, 1]
               acceptable_exit_codes << 2 if opts[:type] == :upgrade
@@ -556,6 +525,55 @@ module Beaker
                 end
               end
             end
+          end
+        end
+
+        # Prepares hosts for rest of {#do_install} operations.
+        # This includes doing these tasks:
+        # - setting 'pe_installer' property on hosts
+        # - setting 'dist' property on hosts
+        # - creating and setting 'working_dir' property on hosts
+        #
+        # @note that these steps aren't necessary for all hosts. Specifically,
+        #   'agent_only' hosts do not require these steps to be executed.
+        #
+        # @param [Array<Host>] hosts Hosts to prepare
+        # @param [Hash{Symbol=>String}] local_options Local options, used to
+        #   pass misc configuration required for the prep steps
+        #
+        # @return nil
+        def prepare_hosts(hosts, local_options={})
+          use_all_tar = ENV['PE_USE_ALL_TAR'] == 'true'
+          hosts.each do |host|
+            host['pe_installer'] ||= 'puppet-enterprise-installer'
+            if host['platform'] !~ /windows|osx/
+              platform = use_all_tar ? 'all' : host['platform']
+              version = host['pe_ver'] || local_options[:pe_ver]
+              host['dist'] = "puppet-enterprise-#{version}-#{platform}"
+            elsif host['platform'] =~ /osx/
+              version = host['pe_ver'] || local_options[:pe_ver]
+              host['dist'] = "puppet-enterprise-#{version}-#{host['platform']}"
+            elsif host['platform'] =~ /windows/
+              version = host[:pe_ver] || local_options['pe_ver_win']
+              is_config_32 = true == (host['ruby_arch'] == 'x86') || host['install_32'] || local_options['install_32']
+              should_install_64bit = !(version_is_less(version, '3.4')) && host.is_x86_64? && !is_config_32
+              #only install 64bit builds if
+              # - we are on pe version 3.4+
+              # - we do not have install_32 set on host
+              # - we do not have install_32 set globally
+              if !(version_is_less(version, '3.99'))
+                if should_install_64bit
+                  host['dist'] = "puppet-agent-#{version}-x64"
+                else
+                  host['dist'] = "puppet-agent-#{version}-x86"
+                end
+              elsif should_install_64bit
+                host['dist'] = "puppet-enterprise-#{version}-x64"
+              else
+                host['dist'] = "puppet-enterprise-#{version}"
+              end
+            end
+            host['working_dir'] = host.tmpdir(Time.new.strftime("%Y-%m-%d_%H.%M.%S"))
           end
         end
 
