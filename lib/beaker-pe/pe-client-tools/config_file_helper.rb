@@ -28,7 +28,7 @@ module Beaker
 
           def self.file_name(tool)
             if tool =~ /orchestrator|job|app/i
-              'puppet-orchestrator.conf'
+              'orchestrator.conf'
             elsif tool =~ /code/i
               'puppet-code.conf'
             elsif tool =~ /access/i
