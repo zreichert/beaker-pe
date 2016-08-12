@@ -30,9 +30,9 @@ module Beaker
               package_name = product.dup
               package_name << "_#{opts[:pe_client_tools_version]}-1#{host['platform'].codename}_#{arch}.deb" if opts[:pe_client_tools_version]
             when /windows/
-              release_path = "#{opts[:dev_builds_url]}/#{product}/#{ opts[:pe_client_tools_sha] }/artifacts/#{variant}/#{opts[:puppet_collection]}/x#{arch}"
+              release_path = "#{opts[:dev_builds_url]}/#{product}/#{ opts[:pe_client_tools_sha] }/artifacts/#{variant}"
               package_name = product.dup
-              package_name << "-#{opts[:pe_client_tools_version]}.1-x#{arch}_VANAGON.msi" if opts[:pe_client_tools_version]
+              package_name << "-#{opts[:pe_client_tools_version]}-x#{arch}.msi" if opts[:pe_client_tools_version]
             when /osx/
               release_path = "#{opts[:dev_builds_url]}/#{product}/#{ opts[:pe_client_tools_sha] }/artifacts/apple/#{version}/#{opts[:puppet_collection]}/#{arch}"
               package_base = product.dup

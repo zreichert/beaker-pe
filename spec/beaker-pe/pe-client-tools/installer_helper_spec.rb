@@ -50,7 +50,7 @@ describe ClassPEClientToolsMixedWithPatterns do
           allow(subject). to receive(:fetch_http_file).with("http://builds.delivery.puppetlabs.net/pe-client-tools/#{opts[:pe_client_tools_sha]}/artifacts/deb/xenial/PC1", "pe-client-tools_#{opts[:pe_client_tools_version]}-1xenial_x86_64.deb", "tmp/repo_configs")
           allow(host). to receive(:external_copy_base)
           expect(subject).to receive(:generic_install_msi_on).with( host,
-                                                                   "http://builds.delivery.puppetlabs.net/pe-client-tools/#{opts[:pe_client_tools_sha]}/artifacts/windows/PC1/xx86_64/pe-client-tools-#{opts[:pe_client_tools_version]}.1-xx86_64_VANAGON.msi",
+                                                                   "http://builds.delivery.puppetlabs.net/pe-client-tools/#{opts[:pe_client_tools_sha]}/artifacts/windows/pe-client-tools-#{opts[:pe_client_tools_version]}-xx86_64.msi",
                                                                    {},
                                                                    { :debug => true }
                                                                   )
