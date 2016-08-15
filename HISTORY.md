@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 2 Aug, 2016 (f4d290f2)](#LATEST)
+* [LATEST - 15 Aug, 2016 (01d03513)](#LATEST)
+* [0.8.0 - 2 Aug, 2016 (b40f583b)](#0.8.0)
 * [0.7.0 - 19 Jul, 2016 (8256c0ac)](#0.7.0)
 * [0.6.0 - 11 Jul, 2016 (e974e7f8)](#0.6.0)
 * [0.5.0 - 15 Jun, 2016 (8f2874fe)](#0.5.0)
@@ -12,7 +13,17 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 2 Aug, 2016 (f4d290f2)
+### <a name = "LATEST">LATEST - 15 Aug, 2016 (01d03513)
+
+* (GEM) update beaker-pe version to 0.9.0 (01d03513)
+
+* (MAINT) fix incorrect orchestrator config file name (#20) (af220d39)
+
+* (QA-2603) update MSI path for "install_pe_client_tools_on" (#21) (919dcf36)
+
+### <a name = "0.8.0">0.8.0 - 2 Aug, 2016 (b40f583b)
+
+* (HISTORY) update beaker-pe history for gem release 0.8.0 (b40f583b)
 
 * (GEM) update beaker-pe version to 0.8.0 (f4d290f2)
 
