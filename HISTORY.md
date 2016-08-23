@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 15 Aug, 2016 (01d03513)](#LATEST)
+* [LATEST - 23 Aug, 2016 (1c8df4c3)](#LATEST)
+* [0.9.0 - 15 Aug, 2016 (e29ed491)](#0.9.0)
 * [0.8.0 - 2 Aug, 2016 (b40f583b)](#0.8.0)
 * [0.7.0 - 19 Jul, 2016 (8256c0ac)](#0.7.0)
 * [0.6.0 - 11 Jul, 2016 (e974e7f8)](#0.6.0)
@@ -13,7 +14,23 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 15 Aug, 2016 (01d03513)
+### <a name = "LATEST">LATEST - 23 Aug, 2016 (1c8df4c3)
+
+* (GEM) update beaker-pe version to 0.10.0 (1c8df4c3)
+
+* (BKR-908) added attempts config to console status check (#22) (d5e711de)
+
+
+```
+(BKR-908) added attempts config to console status check (#22)
+
+* (BKR-908) added attempts config to console status check
+
+* (BKR-908) handle JSON::ParserError case
+```
+### <a name = "0.9.0">0.9.0 - 15 Aug, 2016 (e29ed491)
+
+* (HISTORY) update beaker-pe history for gem release 0.9.0 (e29ed491)
 
 * (GEM) update beaker-pe version to 0.9.0 (01d03513)
 
