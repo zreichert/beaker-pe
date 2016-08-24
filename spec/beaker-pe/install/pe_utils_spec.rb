@@ -1215,7 +1215,7 @@ describe ClassMixedWithDSLInstallUtils do
     it 'allows the number of attempts to be configured via the global options' do
       attempts = 37819
       options = {:pe_console_status_attempts => attempts}
-      subject.instance_variable_set(:@options, options)
+      allow(subject).to receive(:options).and_return(options)
       allow(subject).to receive(:version_is_less).and_return(false)
       allow(subject).to receive(:fail_test)
 
@@ -1224,7 +1224,7 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'yields false to repeat_fibonacci_style_for when conditions are not true' do
-      subject.instance_variable_set(:@options, {})
+      allow(subject).to receive(:options).and_return({})
       allow(subject).to receive(:version_is_less).and_return(false)
       allow(subject).to receive(:sleep)
 
@@ -1240,7 +1240,7 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'yields false to repeat_fibonacci_style_for when JSON::ParserError occurs' do
-      subject.instance_variable_set(:@options, {})
+      allow(subject).to receive(:options).and_return({})
       allow(subject).to receive(:version_is_less).and_return(false)
       allow(subject).to receive(:sleep)
 
@@ -1253,7 +1253,7 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'calls fail_test when no checks pass' do
-      subject.instance_variable_set(:@options, {})
+      allow(subject).to receive(:options).and_return({})
       allow(subject).to receive(:version_is_less).and_return(false)
 
       allow(subject).to receive(:repeat_fibonacci_style_for).and_return(false)

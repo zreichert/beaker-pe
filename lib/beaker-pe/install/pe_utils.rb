@@ -715,7 +715,7 @@ module Beaker
         def check_console_status_endpoint(host)
           return true if version_is_less(host['pe_ver'], '2015.2.0')
 
-          attempts_limit = @options[:pe_console_status_attempts] || 9
+          attempts_limit = options[:pe_console_status_attempts] || 9
           step 'Check Console Status Endpoint' do
             match = repeat_fibonacci_style_for(attempts_limit) do
               output = on(host, "curl -s -k https://localhost:4433/status/v1/services --cert /etc/puppetlabs/puppet/ssl/certs/#{host}.pem --key /etc/puppetlabs/puppet/ssl/private_keys/#{host}.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem", :accept_all_exit_codes => true)
