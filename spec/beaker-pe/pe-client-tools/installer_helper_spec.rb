@@ -25,7 +25,7 @@ describe ClassPEClientToolsMixedWithPatterns do
         hosts.each do |host|
           allow(subject). to receive(:fetch_http_file).with("http://builds.delivery.puppetlabs.net/pe-client-tools/#{opts[:pe_client_tools_sha]}/artifacts/el/6/PC1/x86_64", "pe-client-tools-#{opts[:pe_client_tools_version]}-1.el6.x86_64.rpm", "tmp/repo_configs")
           allow(host). to receive(:external_copy_base)
-          expect(host).to receive(:install_package).with("pe-client-tools-#{opts[:pe_client_tools_version]}-1.el6.x86_64.rpm")
+          expect(host).to receive(:install_package).with("pe-client-tools")
           subject.install_pe_client_tools_on(host, opts)
         end
       end
