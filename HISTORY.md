@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 23 Aug, 2016 (1c8df4c3)](#LATEST)
+* [LATEST - 24 Aug, 2016 (a826414c)](#LATEST)
+* [0.10.0 - 23 Aug, 2016 (b8eff18f)](#0.10.0)
 * [0.9.0 - 15 Aug, 2016 (e29ed491)](#0.9.0)
 * [0.8.0 - 2 Aug, 2016 (b40f583b)](#0.8.0)
 * [0.7.0 - 19 Jul, 2016 (8256c0ac)](#0.7.0)
@@ -14,7 +15,35 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 23 Aug, 2016 (1c8df4c3)
+### <a name = "LATEST">LATEST - 24 Aug, 2016 (a826414c)
+
+* (GEM) update beaker-pe version to 0.10.1 (a826414c)
+
+* Merge pull request #24 from kevpl/bkr922_bkr908_fix (baff3281)
+
+
+```
+Merge pull request #24 from kevpl/bkr922_bkr908_fix
+
+(BKR-922) fixed options reference for beaker-rspec
+```
+* (BKR-922) fixed options reference for beaker-rspec (bd232256)
+
+
+```
+(BKR-922) fixed options reference for beaker-rspec
+
+In BKR-908, code was added to make console timeout checking
+configurable. This code relied on `@options` to get the
+value from the global option. This works in beaker but not
+in beaker-rspec, because `@options` is a TestCase instance
+variable. The accessor `options` works in both, because it
+is a TestCase accessor in beaker, and a similar method has
+been added in beaker-rspec's [shim](https://github.com/puppetlabs/beaker-rspec/blob/master/lib/beaker-rspec/beaker_shim.rb#L26-L28).
+```
+### <a name = "0.10.0">0.10.0 - 23 Aug, 2016 (b8eff18f)
+
+* (HISTORY) update beaker-pe history for gem release 0.10.0 (b8eff18f)
 
 * (GEM) update beaker-pe version to 0.10.0 (1c8df4c3)
 
