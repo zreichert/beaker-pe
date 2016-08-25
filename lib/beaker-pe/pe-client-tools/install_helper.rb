@@ -60,7 +60,7 @@ module Beaker
                 elsif host['platform'] =~ /osx/
                   host.generic_install_dmg(package_name, package_base, installer)
                 else
-                  host.install_package( package_name )
+                  host.install_package( product )
                 end
               end
             end
