@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 24 Aug, 2016 (a826414c)](#LATEST)
+* [LATEST - 25 Aug, 2016 (ca260aa0)](#LATEST)
+* [0.10.1 - 24 Aug, 2016 (97adf276)](#0.10.1)
 * [0.10.0 - 23 Aug, 2016 (b8eff18f)](#0.10.0)
 * [0.9.0 - 15 Aug, 2016 (e29ed491)](#0.9.0)
 * [0.8.0 - 2 Aug, 2016 (b40f583b)](#0.8.0)
@@ -15,7 +16,23 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 24 Aug, 2016 (a826414c)
+### <a name = "LATEST">LATEST - 25 Aug, 2016 (ca260aa0)
+
+* (GEM) update beaker-pe version to 0.11.0 (ca260aa0)
+
+* Merge pull request #23 from zreichert/maint/master/QA-2620_fix_package_installation (176c59ee)
+
+
+```
+Merge pull request #23 from zreichert/maint/master/QA-2620_fix_package_installation
+
+(QA-2620) update package install for pe-client-tools  to use package …
+```
+* (QA-2620) update package install for pe-client-tools  to use package name not file name (120aae3b)
+
+### <a name = "0.10.1">0.10.1 - 24 Aug, 2016 (97adf276)
+
+* (HISTORY) update beaker-pe history for gem release 0.10.1 (97adf276)
 
 * (GEM) update beaker-pe version to 0.10.1 (a826414c)
 
