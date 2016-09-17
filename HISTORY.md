@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 25 Aug, 2016 (ca260aa0)](#LATEST)
+* [LATEST - 16 Sep, 2016 (d16e0bc1)](#LATEST)
+* [0.11.0 - 25 Aug, 2016 (7167f39e)](#0.11.0)
 * [0.10.1 - 24 Aug, 2016 (97adf276)](#0.10.1)
 * [0.10.0 - 23 Aug, 2016 (b8eff18f)](#0.10.0)
 * [0.9.0 - 15 Aug, 2016 (e29ed491)](#0.9.0)
@@ -16,7 +17,23 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 25 Aug, 2016 (ca260aa0)
+### <a name = "LATEST">LATEST - 16 Sep, 2016 (d16e0bc1)
+
+* (GEM) update beaker-pe version to 0.12.0 (d16e0bc1)
+
+* Merge pull request #26 from zreichert/maint/master/QA-2620_fix_installation_noop_for_nix (e75cdb09)
+
+
+```
+Merge pull request #26 from zreichert/maint/master/QA-2620_fix_installation_noop_for_nix
+
+(QA-2620) update install_pe_client_tools_on to use package repo
+```
+* (QA-2620) update install_pe_client_tools_on to use package repo (665da12b)
+
+### <a name = "0.11.0">0.11.0 - 25 Aug, 2016 (7167f39e)
+
+* (HISTORY) update beaker-pe history for gem release 0.11.0 (7167f39e)
 
 * (GEM) update beaker-pe version to 0.11.0 (ca260aa0)
 
