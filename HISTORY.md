@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 16 Sep, 2016 (d16e0bc1)](#LATEST)
+* [LATEST - 26 Sep, 2016 (0f384656)](#LATEST)
+* [0.12.0 - 16 Sep, 2016 (81e5a0b0)](#0.12.0)
 * [0.11.0 - 25 Aug, 2016 (7167f39e)](#0.11.0)
 * [0.10.1 - 24 Aug, 2016 (97adf276)](#0.10.1)
 * [0.10.0 - 23 Aug, 2016 (b8eff18f)](#0.10.0)
@@ -17,7 +18,44 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 16 Sep, 2016 (d16e0bc1)
+### <a name = "LATEST">LATEST - 26 Sep, 2016 (0f384656)
+
+* (GEM) update beaker-pe version to 1.0.0 (0f384656)
+
+* Merge pull request #27 from kevpl/bkr941_beaker-pe_1.0 (55d48b15)
+
+
+```
+Merge pull request #27 from kevpl/bkr941_beaker-pe_1.0
+
+(BKR-941) beaker-pe 1.0 changes
+```
+* (BKR-941) update scooter dependency (c124fef9)
+
+* (BKR-941) update beaker dependency (faea2843)
+
+
+```
+(BKR-941) update beaker dependency
+
+Since beaker-pe 1.0 will be using the new inclusion mechanism
+of including itself in beaker's DSL, it shouldn't allow itself
+to be used with beaker < 3.0.
+```
+* (BKR-941) beaker-pe 1.0 changes (2a05be9f)
+
+
+```
+(BKR-941) beaker-pe 1.0 changes
+
+These are the changes required to update beaker-pe to
+its first major version. These changes are done to use
+the beaker 3.0 DSL library inclusion mechanism, pulling
+the current beaker-pe requirement out of beaker itself
+```
+### <a name = "0.12.0">0.12.0 - 16 Sep, 2016 (81e5a0b0)
+
+* (HISTORY) update beaker-pe history for gem release 0.12.0 (81e5a0b0)
 
 * (GEM) update beaker-pe version to 0.12.0 (d16e0bc1)
 
