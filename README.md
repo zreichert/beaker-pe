@@ -11,6 +11,22 @@ The PE Beaker library contains all PE-specific
 
 that help someone acceptance test PE easier with Beaker.
 
+# Upgrading from 0.y to 1.y?
+
+If you've used beaker-pe previously (during the 0.y versions), you'll
+have to change the way that you include beaker-pe for 1.y versions &
+beyond.
+
+Before, you could just include beaker itself and you'd get beaker-pe
+because beaker required beaker-pe. With beaker 3.0, this dependency has
+been taken out of beaker. Now to use beaker-pe, you'll have to do two
+things:
+
+1. add a beaker-pe requirement as a sibling to your current beaker gem
+  requirement
+2. put a `require 'beaker-pe'` statement in your tests/code that need
+  beaker-pe-specific functionality
+
 # Spec Testing
 
 Spec tests all live under the `spec` folder.  These are the default rake task, &
