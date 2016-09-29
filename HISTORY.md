@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 26 Sep, 2016 (0f384656)](#LATEST)
+* [LATEST - 29 Sep, 2016 (e4576973)](#LATEST)
+* [1.0.0 - 26 Sep, 2016 (84a5b56b)](#1.0.0)
 * [0.12.0 - 16 Sep, 2016 (81e5a0b0)](#0.12.0)
 * [0.11.0 - 25 Aug, 2016 (7167f39e)](#0.11.0)
 * [0.10.1 - 24 Aug, 2016 (97adf276)](#0.10.1)
@@ -18,7 +19,53 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 26 Sep, 2016 (0f384656)
+### <a name = "LATEST">LATEST - 29 Sep, 2016 (e4576973)
+
+* (GEM) update beaker-pe version to 1.1.0 (e4576973)
+
+* Merge pull request #31 from tvpartytonight/pe_17658_update_gpg_key (60a293f3)
+
+
+```
+Merge pull request #31 from tvpartytonight/pe_17658_update_gpg_key
+
+(PE-17658) Update gpg key location
+```
+* (PE-17658) Update gpg key location (5824f76d)
+
+
+```
+(PE-17658) Update gpg key location
+
+Prior to this change, beaker-pe was downloading
+an expired key: pubkey.gpg, which caused packages
+to fail authentication on debian platforms (ubuntu).
+
+This commit updates the key we're getting to
+DEB-GPG-KEY-puppetlabs which is still valid.
+```
+* Merge pull request #29 from tvpartytonight/BKR-945_add_beakerpe_acceptance (ac814a9a)
+
+
+```
+Merge pull request #29 from tvpartytonight/BKR-945_add_beakerpe_acceptance
+
+(BKR-945) Add acceptance tests to beaker-pe
+```
+* (BKR-945) Add acceptance tests to beaker-pe (cf0bf446)
+
+
+```
+(BKR-945) Add acceptance tests to beaker-pe
+
+Previous to this commit, we relied on tests that existed within the
+beaker repo to test functionality that actually resided within
+beaker-pe. This change adds those tests to beaker-pe, so they can be
+removed beaker itself.
+```
+### <a name = "1.0.0">1.0.0 - 26 Sep, 2016 (84a5b56b)
+
+* (HISTORY) update beaker-pe history for gem release 1.0.0 (84a5b56b)
 
 * (GEM) update beaker-pe version to 1.0.0 (0f384656)
 
