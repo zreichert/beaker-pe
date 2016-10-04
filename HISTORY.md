@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 29 Sep, 2016 (e4576973)](#LATEST)
+* [LATEST - 4 Oct, 2016 (bab690e0)](#LATEST)
+* [1.1.0 - 29 Sep, 2016 (5b9f2600)](#1.1.0)
 * [1.0.0 - 26 Sep, 2016 (84a5b56b)](#1.0.0)
 * [0.12.0 - 16 Sep, 2016 (81e5a0b0)](#0.12.0)
 * [0.11.0 - 25 Aug, 2016 (7167f39e)](#0.11.0)
@@ -19,7 +20,25 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 29 Sep, 2016 (e4576973)
+### <a name = "LATEST">LATEST - 4 Oct, 2016 (bab690e0)
+
+* (GEM) update beaker-pe version to 1.2.0 (bab690e0)
+
+* (PE-17359) Adding Windows frictionless agent support (#28) (f4b72e18)
+
+
+```
+(PE-17359) Adding Windows frictionless agent support (#28)
+
+This commit adds support for windows frictionless agent.
+There was a change to the pe_repo logic, to make sure the master
+downloads the new windows script.
+Also there is the addition of a powershell script, which is the
+direct equivlant of curl | bash.
+```
+### <a name = "1.1.0">1.1.0 - 29 Sep, 2016 (5b9f2600)
+
+* (HISTORY) update beaker-pe history for gem release 1.1.0 (5b9f2600)
 
 * (GEM) update beaker-pe version to 1.1.0 (e4576973)
 
