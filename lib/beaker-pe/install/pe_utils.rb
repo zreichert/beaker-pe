@@ -899,7 +899,7 @@ module Beaker
 
           #wait for output to host['higgs_file']
           #we're all done when we find this line in the PE installation log
-          higgs_re = /Please\s+go\s+to\s+https:\/\/.*\s+in\s+your\s+browser\s+to\s+continue\s+installation/m
+          higgs_re = /o\s+to\s+https:\/\/.*\s+in\s+your\s+browser\s+to\s+continue\s+installation/m
           res = Result.new(host, 'tmp cmd')
           tries = 10
           attempts = 0
