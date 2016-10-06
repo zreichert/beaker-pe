@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 4 Oct, 2016 (bab690e0)](#LATEST)
+* [LATEST - 6 Oct, 2016 (24d8b969)](#LATEST)
+* [1.2.0 - 4 Oct, 2016 (7362ab78)](#1.2.0)
 * [1.1.0 - 29 Sep, 2016 (5b9f2600)](#1.1.0)
 * [1.0.0 - 26 Sep, 2016 (84a5b56b)](#1.0.0)
 * [0.12.0 - 16 Sep, 2016 (81e5a0b0)](#0.12.0)
@@ -20,7 +21,53 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 4 Oct, 2016 (bab690e0)
+### <a name = "LATEST">LATEST - 6 Oct, 2016 (24d8b969)
+
+* (GEM) update beaker-pe version to 1.3.0 (24d8b969)
+
+* Merge pull request #32 from cthorn42/main/master/PE-17359_fix_windows_frictionless_upgrade (8feaaf0f)
+
+
+```
+Merge pull request #32 from cthorn42/main/master/PE-17359_fix_windows_frictionless_upgrade
+
+PE-17359 Fix windows frictionless upgrades
+```
+* Merge pull request #33 from tvpartytonight/BKR-953 (e53e018a)
+
+
+```
+Merge pull request #33 from tvpartytonight/BKR-953
+
+(BKR-953) Stop including the dsl at the top level
+```
+* (BKR-953) Stop including the dsl at the top level (12823a51)
+
+
+```
+(BKR-953) Stop including the dsl at the top level
+
+To reload the beaker dsl after adding modules to it, beaker-pe had just
+included the module into the top level namespace. This resulted in
+errors loading in other libraries not expecting the dsl to be loaded at
+the top level. This commit changes that inclusion mechanism to be safe
+from namespace collisions.
+```
+* PE-17359 Fix windows frictionless upgrades (883e4df5)
+
+
+```
+PE-17359 Fix windows frictionless upgrades
+
+There was an error with my previous PR. PE 2016.2.1 to PE 2016.4.0
+were failing because the PE 2016.2.1 install of the windows agent
+would attempt to install via frictionless, and not with the old msi
+method.
+This PR fixes this.
+```
+### <a name = "1.2.0">1.2.0 - 4 Oct, 2016 (7362ab78)
+
+* (HISTORY) update beaker-pe history for gem release 1.2.0 (7362ab78)
 
 * (GEM) update beaker-pe version to 1.2.0 (bab690e0)
 
