@@ -425,8 +425,8 @@ module Beaker
           end
 
           install_hosts.each do |host|
-            #windows agents from 4.0 -> 2016.1.2 were only installable via aio method
-            is_windows_msi_and_aio = (host['platform'] =~ /windows/ && (version_is_less(host['pe_ver'], '2016.3.0') && !version_is_less(host['pe_ver'], '3.99') && !(host['roles'].include?('frictionless'))))
+            #windows agents from 4.0 -> 2016.1.2 were only installable via the aio method
+            is_windows_msi_and_aio = (host['platform'] =~ /windows/ && (version_is_less(host['pe_ver'], '2016.3.0') && !version_is_less(host['pe_ver'], '3.99')))
 
             if agent_only_check_needed && hosts_agent_only.include?(host) || is_windows_msi_and_aio
               host['type'] = 'aio'
