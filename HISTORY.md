@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 6 Oct, 2016 (24d8b969)](#LATEST)
+* [LATEST - 11 Oct, 2016 (2c31bfcb)](#LATEST)
+* [1.3.0 - 6 Oct, 2016 (97f781bb)](#1.3.0)
 * [1.2.0 - 4 Oct, 2016 (7362ab78)](#1.2.0)
 * [1.1.0 - 29 Sep, 2016 (5b9f2600)](#1.1.0)
 * [1.0.0 - 26 Sep, 2016 (84a5b56b)](#1.0.0)
@@ -21,7 +22,44 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 6 Oct, 2016 (24d8b969)
+### <a name = "LATEST">LATEST - 11 Oct, 2016 (2c31bfcb)
+
+* (GEM) update beaker-pe version to 1.4.0 (2c31bfcb)
+
+* Merge pull request #34 from phongdly/PE-17825/Higgs_Automation (52921be8)
+
+
+```
+Merge pull request #34 from phongdly/PE-17825/Higgs_Automation
+
+(PE-17825) Update do_higgs_install method with new installation log
+```
+* (PE-17825) added older version compability (d4d16462)
+
+
+```
+(PE-17825) added older version compability
+
+[skip ci]
+```
+* (PE-17825) Update do_higgs_install method with new installation log (f17b5091)
+
+
+```
+(PE-17825) Update do_higgs_install method with new installation log
+
+Prior to this PR, the PE the do_higgs_install method waits for the below PE installation log:
+"Please go to https://higgs_installer_web_server:3000 in your browser to continue installation"
+
+However, newer PE, for example in Davis builds, that line of log has changed to be:
+"#Go to  https://higgs_installer_web_server:3000 in your browser to continue installation"
+
+This PR is a simple fix for this by only searching for the substring:
+"o to  https://higgs_installer_web_server:3000 in your browser to continue installation"
+```
+### <a name = "1.3.0">1.3.0 - 6 Oct, 2016 (97f781bb)
+
+* (HISTORY) update beaker-pe history for gem release 1.3.0 (97f781bb)
 
 * (GEM) update beaker-pe version to 1.3.0 (24d8b969)
 
