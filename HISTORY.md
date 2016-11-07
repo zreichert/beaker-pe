@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 11 Oct, 2016 (2c31bfcb)](#LATEST)
+* [LATEST - 7 Nov, 2016 (614c736b)](#LATEST)
+* [1.4.0 - 11 Oct, 2016 (6becdbb2)](#1.4.0)
 * [1.3.0 - 6 Oct, 2016 (97f781bb)](#1.3.0)
 * [1.2.0 - 4 Oct, 2016 (7362ab78)](#1.2.0)
 * [1.1.0 - 29 Sep, 2016 (5b9f2600)](#1.1.0)
@@ -22,7 +23,30 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 11 Oct, 2016 (2c31bfcb)
+### <a name = "LATEST">LATEST - 7 Nov, 2016 (614c736b)
+
+* (GEM) update beaker-pe version to 1.5.0 (614c736b)
+
+* Merge pull request #36 from james-stocks/BKR-967 (e4a48b7c)
+
+
+```
+Merge pull request #36 from james-stocks/BKR-967
+
+(BKR-967) Add :disable_analytics option
+```
+* (BKR-967) Add :disable_analytics option (c9e25658)
+
+
+```
+(BKR-967) Add :disable_analytics option
+
+Allow :disable_analytics to be set in beaker options, allowing us to block
+traffic to Google Analytics.
+```
+### <a name = "1.4.0">1.4.0 - 11 Oct, 2016 (6becdbb2)
+
+* (HISTORY) update beaker-pe history for gem release 1.4.0 (6becdbb2)
 
 * (GEM) update beaker-pe version to 1.4.0 (2c31bfcb)
 
