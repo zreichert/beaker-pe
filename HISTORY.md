@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 7 Nov, 2016 (614c736b)](#LATEST)
+* [LATEST - 16 Nov, 2016 (9d6d30e0)](#LATEST)
+* [1.5.0 - 7 Nov, 2016 (24d78992)](#1.5.0)
 * [1.4.0 - 11 Oct, 2016 (6becdbb2)](#1.4.0)
 * [1.3.0 - 6 Oct, 2016 (97f781bb)](#1.3.0)
 * [1.2.0 - 4 Oct, 2016 (7362ab78)](#1.2.0)
@@ -23,7 +24,64 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 7 Nov, 2016 (614c736b)
+### <a name = "LATEST">LATEST - 16 Nov, 2016 (9d6d30e0)
+
+* (GEM) update beaker-pe version to 1.6.0 (9d6d30e0)
+
+* Merge pull request #40 from jpartlow/issue/master/pe-18516-always-set-pe-conf-for-upgrades (ace43aca)
+
+
+```
+Merge pull request #40 from jpartlow/issue/master/pe-18516-always-set-pe-conf-for-upgrades
+
+(PE-18516,PE-18170) Temporarily set pe.conf when upgrading to Flanders
+```
+* (PE-18516,PE-18170) Temporarily set pe.conf when upgrading to Flanders (9df782ee)
+
+
+```
+(PE-18516,PE-18170) Temporarily set pe.conf when upgrading to Flanders
+
+At the moment, MEEP does not create a 2.0 pe.conf when recovering
+configuration for an upgrade.  This is preventing all upgrade tests from
+PE >= 2016.2 (when meep was introduced) to PE >= 2017.1 from completing
+because meep ends up using a 1.0 pe.conf that has no node_roles. Without
+the node_roles information, the node is not considered infrastructure,
+and meep's enc returns no classes for it, so nothing happens in the
+upgrade apply.
+
+This is not currently a problem upgrading from < 2016.2 because
+beaker-pe is providing the beaker-answers pe.conf in those cases.
+
+To work around this, I've added a check, just if we are upgrading to a
+Flanders version, which supplies the beaker-answers generated pe.conf.
+
+This patch is just intended to get upgrades from earlier meep versions
+working in CI. When we get to PE-18170 (also scheduled for Flanders)
+we'll work on improving recover configuration to generate a 2.0 pe.conf,
+with the goal being that beaker-answers should not need to provide
+anything for pe.conf for Flanders upgrades unless some additional
+parameters were added in the beaker configuration.
+```
+* Merge pull request #38 from kevpl/docs_README_fill (d8546812)
+
+
+```
+Merge pull request #38 from kevpl/docs_README_fill
+
+(MAINT) fill README doc & MAINTAINERS
+```
+* (MAINT) fill README doc & MAINTAINERS (23a40aba)
+
+
+```
+(MAINT) fill README doc & MAINTAINERS
+
+[skip ci]
+```
+### <a name = "1.5.0">1.5.0 - 7 Nov, 2016 (24d78992)
+
+* (HISTORY) update beaker-pe history for gem release 1.5.0 (24d78992)
 
 * (GEM) update beaker-pe version to 1.5.0 (614c736b)
 
