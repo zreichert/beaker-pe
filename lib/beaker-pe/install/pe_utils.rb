@@ -1,12 +1,9 @@
 [ 'aio_defaults', 'pe_defaults', 'puppet_utils', 'windows_utils' ].each do |lib|
     require "beaker/dsl/install_utils/#{lib}"
 end
-require "beaker/host_prebuilt_steps"
 require "beaker-answers"
 require "timeout"
 require "json"
-require "beaker-pe/options/presets"
-
 module Beaker
   module DSL
     module InstallUtils
@@ -25,7 +22,6 @@ module Beaker
         include PEDefaults
         include PuppetUtils
         include WindowsUtils
-        include HostPrebuiltSteps
 
         # Version of PE when we switched from legacy installer to MEEP.
         MEEP_CUTOVER_VERSION = '2016.2.0'
@@ -709,12 +705,6 @@ module Beaker
           install_pe_on(hosts, options)
         end
 
-        def disable_analytics(hosts)
-          logger.info("Disabling analytics on dashboard host(s)")
-          set_etc_hosts(hosts, "127.0.0.1\tgoogle-analytics.com\n")
-          set_etc_hosts(hosts, "127.0.0.1\twww.google-analytics.com\n")
-        end
-
         def check_puppetdb_status_endpoint(host)
           if version_is_less(host['pe_ver'], '2016.1.0')
             return true
@@ -784,8 +774,6 @@ module Beaker
         #   options, refer to {#do_install} documentation
         #
         def install_pe_on(install_hosts, opts)
-          opts = pe_presets.merge(opts)
-
           confine_block(:to, {}, install_hosts) do
             sorted_hosts.each do |host|
               #process the version files if necessary
@@ -803,11 +791,6 @@ module Beaker
                 host['pe_ver'] ||= Beaker::Options::PEVersionScraper.load_pe_version(host[:pe_dir] || opts[:pe_dir], opts[:pe_version_file])
               end
             end
-
-            if opts[:disable_analytics] then
-              disable_analytics(dashboard)
-            end
-
             do_install sorted_hosts, opts
           end
         end
