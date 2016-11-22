@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 16 Nov, 2016 (9d6d30e0)](#LATEST)
+* [LATEST - 22 Nov, 2016 (4b812f78)](#LATEST)
+* [1.6.0 - 16 Nov, 2016 (0da1b64c)](#1.6.0)
 * [1.5.0 - 7 Nov, 2016 (24d78992)](#1.5.0)
 * [1.4.0 - 11 Oct, 2016 (6becdbb2)](#1.4.0)
 * [1.3.0 - 6 Oct, 2016 (97f781bb)](#1.3.0)
@@ -24,7 +25,32 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 16 Nov, 2016 (9d6d30e0)
+### <a name = "LATEST">LATEST - 22 Nov, 2016 (4b812f78)
+
+* (GEM) update beaker-pe version to 1.6.1 (4b812f78)
+
+* Merge pull request #39 from james-stocks/BKR-967 (2d17d83f)
+
+
+```
+Merge pull request #39 from james-stocks/BKR-967
+
+Revert "(BKR-967) Add :disable_analytics option"
+```
+* Revert "(BKR-967) Add :disable_analytics option" (a9fdaacb)
+
+
+```
+Revert "(BKR-967) Add :disable_analytics option"
+
+This reverts commit c9e25658e8cd282e1676d723131946268e308579.
+
+This commit is not useful because it is blocking analytics from the console host;
+but analytics are sent from the user browser and not the console host.
+```
+### <a name = "1.6.0">1.6.0 - 16 Nov, 2016 (0da1b64c)
+
+* (HISTORY) update beaker-pe history for gem release 1.6.0 (0da1b64c)
 
 * (GEM) update beaker-pe version to 1.6.0 (9d6d30e0)
 
