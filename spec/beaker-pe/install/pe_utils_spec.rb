@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'beaker'
-require 'beaker-pe/options/presets'
 
 class ClassMixedWithDSLInstallUtils
   include Beaker::DSL::InstallUtils
@@ -284,7 +283,6 @@ describe ClassMixedWithDSLInstallUtils do
       context 'the do_higgs_install' do
         it 'submits the correct installer cmd to invoke Higgs' do
           prep_host(host)
-          allow( subject ).to receive( :options ).and_return( {} )
           subject.do_higgs_install(host, opts)
         end
       end
@@ -307,7 +305,6 @@ describe ClassMixedWithDSLInstallUtils do
       context 'the do_higgs_install' do
         it 'submits the correct installer cmd to invoke Higgs' do
           prep_host(host)
-          allow( subject ).to receive( :options ).and_return( {} )
           subject.do_higgs_install(host, opts)
         end
       end
@@ -892,7 +889,6 @@ describe ClassMixedWithDSLInstallUtils do
       end
 
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :options ).and_return( {} )
       #create answers file per-host, except windows
       allow( subject ).to receive( :create_remote_file ).with( hosts[0], /answers/, /q/ )
       #run installer on all hosts
@@ -948,7 +944,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :sleep ).and_return( true )
 
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :options ).and_return( {} )
 
       #run higgs installer command
       expect( subject ).to receive( :on ).with( hosts[0],
@@ -964,7 +959,6 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :sleep ).and_return( true )
 
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :options ).and_return( {} )
 
       #run higgs installer command
       expect( subject ).to receive( :on ).with( hosts[0],
@@ -983,35 +977,7 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :options ).and_return( {} )
       allow( subject ).to receive( :hosts ).and_return( hosts_sorted )
       allow( subject ).to receive( :do_install ).and_return( true )
-      allow( subject ).to receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( hosts, pe_presets )
-      subject.install_pe
-    end
-
-    it 'blocks analytics by default' do
-      allow( subject ).to receive( :options ).and_return( {} )
-      allow( subject ).to receive( :hosts ).and_return( hosts_sorted )
-      allow( subject ).to receive( :do_install ).and_return( true )
-      allow( subject ).to receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( hosts, pe_presets )
-      subject.install_pe
-    end
-
-    it 'blocks analytics when disable_analytics is true' do
-      allow( subject ).to receive( :options ).and_return( {:disable_analytics => true} )
-      allow( subject ).to receive( :hosts ).and_return( hosts_sorted )
-      allow( subject ).to receive( :do_install ).and_return( true )
-      allow( subject ).to receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( hosts, {:disable_analytics => true} )
-      subject.install_pe
-    end
-
-    it 'does not block analytics when disable_analytics is false' do
-      allow( subject ).to receive( :options ).and_return( {:disable_analytics => false} )
-      allow( subject ).to receive( :hosts ).and_return( hosts_sorted )
-      allow( subject ).to receive( :do_install ).and_return( true )
-      expect( subject ).to_not receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( hosts, {:disable_analytics => false} )
+      expect( subject ).to receive( :do_install ).with( hosts, {} )
       subject.install_pe
     end
 
@@ -1023,8 +989,7 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :hosts ).and_return( hosts_sorted )
       allow( subject ).to receive( :options ).and_return( {} )
       allow( subject ).to receive( :do_install ).and_return( true )
-      allow( subject ).to receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( hosts, pe_presets )
+      expect( subject ).to receive( :do_install ).with( hosts, {} )
       subject.install_pe
       hosts.each do |h|
         expect( h['pe_ver'] ).to be === '2.8'
@@ -1033,10 +998,8 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'can act upon a single host' do
       allow( subject ).to receive( :hosts ).and_return( hosts )
-      allow( subject ).to receive( :options ).and_return( {} )
       allow( subject ).to receive( :sorted_hosts ).and_return( [hosts[0]] )
-      allow( subject ).to receive( :set_etc_hosts )
-      expect( subject ).to receive( :do_install ).with( [hosts[0]], pe_presets )
+      expect( subject ).to receive( :do_install ).with( [hosts[0]], {} )
       subject.install_pe_on(hosts[0], {})
     end
   end
