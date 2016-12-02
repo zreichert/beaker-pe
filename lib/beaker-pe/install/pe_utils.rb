@@ -592,13 +592,19 @@ module Beaker
         def get_puppet_agent_version(host, local_options={})
           puppet_agent_version = host[:puppet_agent_version] || local_options[:puppet_agent_version]
           return puppet_agent_version if puppet_agent_version
+          log_prefix = "No :puppet_agent_version in host #{host} or local options."
+          fail_message = "#{log_prefix} Could not read facts from master to determine puppet_agent_version"
           # we can query the master because do_install is called passing
           # the {#sorted_hosts}, so we know the master will be installed
           # before the agents
           facts_result = on(master, 'puppet facts')
+          raise ArgumentError, fail_message if facts_result.exit_code != 0
           facts_hash = JSON.parse(facts_result.stdout.chomp)
-          puppet_agent_version = facts_hash['values']['aio_agent_build']
-          logger.warn("No :puppet_agent_version in host #{host} or local options. Read puppet-agent version #{puppet_agent_version} from master")
+          puppet_agent_version   = facts_hash['values']['aio_agent_build']
+          # released masters don't have _build fact, fallback to _version
+          puppet_agent_version ||= facts_hash['values']['aio_agent_version']
+          raise ArgumentError, fail_message if puppet_agent_version.nil?
+          logger.warn("#{log_prefix} Read puppet-agent version #{puppet_agent_version} from master")
           # saving so that we don't have to query the master more than once
           local_options[:puppet_agent_version] = puppet_agent_version
           puppet_agent_version

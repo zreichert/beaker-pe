@@ -1306,7 +1306,8 @@ describe ClassMixedWithDSLInstallUtils do
       it 'uses host setting over all others' do
         pa_version = 'pants of the dance'
         host_arg = { :puppet_agent_version => pa_version }
-        expect( subject.get_puppet_agent_version( host_arg ) ).to be === pa_version
+        local_options = { :puppet_agent_version => 'something else' }
+        expect( subject.get_puppet_agent_version( host_arg, local_options ) ).to be === pa_version
       end
 
       it 'uses local options over all others (except host setting)' do
@@ -1318,24 +1319,63 @@ describe ClassMixedWithDSLInstallUtils do
 
     context 'when the puppet_agent version has to be read dynamically' do
 
-      before :each do
+      def test_setup(mock_values={})
+        json_hash    = mock_values[:json_hash]
+        pa_version   = mock_values[:pa_version]
+        pa_version ||= 'pa_version_' + rand(10 ** 5).to_s.rjust(5,'0') # 5 digit random number string
+        json_hash  ||= "{ \"values\": { \"aio_agent_build\": \"#{pa_version}\" }}"
+
         allow( subject ).to receive( :master ).and_return( {} )
-        @result_mock = Object.new
-        @pa_version = 'pa_version_'
-        @pa_version << rand(10 ** 5).to_s.rjust(5,'0') # 5 digit random number string
-        json_hash = "{ \"values\": { \"aio_agent_build\": \"#{@pa_version}\" }}"
-        allow( @result_mock ).to receive( :stdout ).and_return( json_hash )
-        allow( subject ).to receive( :on ).and_return( @result_mock )
+        result_mock = Object.new
+        allow( result_mock ).to receive( :stdout ).and_return( json_hash )
+        allow( result_mock ).to receive( :exit_code ).and_return( 0 )
+        allow( subject ).to receive( :on ).and_return( result_mock )
+        pa_version
       end
 
       it 'parses and returns the command output correctly' do
-        expect( subject.get_puppet_agent_version( {} ) ).to be === @pa_version
+        pa_version = test_setup
+        expect( subject.get_puppet_agent_version( {} ) ).to be === pa_version
       end
 
       it 'saves the puppet_agent version in the local_options argument' do
+        pa_version = test_setup
         local_options_hash = {}
         subject.get_puppet_agent_version( {}, local_options_hash )
-        expect( local_options_hash[:puppet_agent_version] ).to be === @pa_version
+        expect( local_options_hash[:puppet_agent_version] ).to be === pa_version
+      end
+
+      it 'falls back on aio_agent_version if _build is not available' do
+        pa_version = 'your_face_13587'
+        test_setup( :json_hash => "{ \"values\": { \"aio_agent_version\": \"#{pa_version}\" }}" )
+        expect( subject.get_puppet_agent_version( {} ) ).to be === pa_version
+      end
+    end
+
+    context 'failures' do
+
+      def test_setup(mock_values)
+        exit_code   = mock_values[:exit_code] || 0
+        json_hash   = mock_values[:json_hash]
+        pa_version  = 'pa_version_'
+        pa_version << rand(10 ** 5).to_s.rjust(5,'0') # 5 digit random number string
+        json_hash ||= "{ \"values\": { \"aio_agent_build\": \"#{pa_version}\" }}"
+
+        allow( subject ).to receive( :master ).and_return( {} )
+        result_mock = Object.new
+        allow( result_mock ).to receive( :stdout ).and_return( json_hash )
+        allow( result_mock ).to receive( :exit_code ).and_return( exit_code )
+        allow( subject ).to receive( :on ).and_return( result_mock )
+      end
+
+      it 'fails if "puppet facts" does not succeed' do
+        test_setup( :exit_code => 1 )
+        expect { subject.get_puppet_agent_version( {} ) }.to raise_error( ArgumentError )
+      end
+
+      it 'fails if neither fact exists' do
+        test_setup( :json_hash => "{ \"values\": {}}" )
+        expect { subject.get_puppet_agent_version( {} ) }.to raise_error( ArgumentError )
       end
     end
   end
