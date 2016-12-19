@@ -772,15 +772,32 @@ describe ClassMixedWithDSLInstallUtils do
         "puppet #{arg}"
       end
 
+      pa_version = 'rarified_air_9364'
+      allow( subject ).to receive( :get_puppet_agent_version ).and_return( pa_version )
+
       allow( subject ).to receive( :hosts ).and_return( hosts )
       #create answers file per-host, except windows
       expect( subject ).to receive( :create_remote_file ).with( hosts[0], /answers/, /q/ ).once
       #run installer on all hosts
       expect( subject ).to receive( :on ).with( hosts[0], /puppet-enterprise-installer/ ).once
-      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with( hosts[1],
-                                                                                     {:puppet_agent_version=>nil, :puppet_agent_sha=>nil, :pe_ver=>hosts[1][:pe_ver], :puppet_collection=>nil} ).once
-      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with( hosts[2],
-                                                                                     {:puppet_agent_version=>nil, :puppet_agent_sha=>nil, :pe_ver=>hosts[2][:pe_ver], :puppet_collection=>nil} ).once
+      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with(
+        hosts[1],
+        {
+          :puppet_agent_version => pa_version,
+          :puppet_agent_sha => nil,
+          :pe_ver => hosts[1][:pe_ver],
+          :puppet_collection => nil
+        }
+      ).once
+      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with(
+        hosts[2],
+        {
+          :puppet_agent_version => pa_version,
+          :puppet_agent_sha => nil,
+          :pe_ver => hosts[2][:pe_ver],
+          :puppet_collection => nil
+        }
+      ).once
       hosts.each do |host|
         expect( subject ).to receive( :configure_type_defaults_on ).with( host ).once
         expect( subject ).to receive( :sign_certificate_for ).with( host ).once
@@ -812,6 +829,9 @@ describe ClassMixedWithDSLInstallUtils do
       hosts[2][:platform] = Beaker::Platform.new('el-6-x86_64')
       hosts[2][:pe_ver]   = '3.8'
 
+      pa_version = 'rarified_air_1675'
+      allow( subject ).to receive( :get_puppet_agent_version ).and_return( pa_version )
+
       allow( subject ).to receive( :hosts ).and_return( hosts )
       allow( subject ).to receive( :options ).and_return(Beaker::Options::Presets.new.presets)
       allow( subject ).to receive( :on ).and_return( Beaker::Result.new( {}, '' ) )
@@ -834,8 +854,15 @@ describe ClassMixedWithDSLInstallUtils do
       expect( subject ).to receive( :create_remote_file ).with( hosts[0], /answers/, /q/ ).once
       #run installer on all hosts
       expect( subject ).to receive( :on ).with( hosts[0], /puppet-enterprise-installer/ ).once
-      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with( hosts[1],
-                                                                                      {:puppet_agent_version=>nil, :puppet_agent_sha=>nil, :pe_ver=>hosts[1][:pe_ver], :puppet_collection=>nil} ).once
+      expect( subject ).to receive( :install_puppet_agent_pe_promoted_repo_on ).with(
+        hosts[1],
+        {
+          :puppet_agent_version => pa_version,
+          :puppet_agent_sha => nil,
+          :pe_ver => hosts[1][:pe_ver],
+          :puppet_collection => nil
+        }
+      ).once
       expect( subject ).to receive( :on ).with( hosts[2], /puppet-enterprise-installer/ ).once
       hosts.each do |host|
         expect( subject ).to receive( :configure_type_defaults_on ).with( host ).once
@@ -872,6 +899,9 @@ describe ClassMixedWithDSLInstallUtils do
         opts[:HOSTS][host.name] = host
       end
 
+      pa_version = 'rarified_air_75699'
+      allow( subject ).to receive( :get_puppet_agent_version ).and_return( pa_version )
+
       allow( subject ).to receive( :hosts ).and_return( hosts )
       allow( subject ).to receive( :options ).and_return(Beaker::Options::Presets.new.presets)
       allow( subject ).to receive( :on ).and_return( Beaker::Result.new( {}, '' ) )
@@ -897,7 +927,7 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive(
         :install_puppet_agent_pe_promoted_repo_on
       ).with( hosts[1], {
-        :puppet_agent_version => nil,
+        :puppet_agent_version => pa_version,
         :puppet_agent_sha     => nil,
         :pe_ver               => hosts[1][:pe_ver],
         :puppet_collection    => nil
@@ -1267,7 +1297,86 @@ describe ClassMixedWithDSLInstallUtils do
       expect(subject).to receive(:fail_test)
       subject.check_console_status_endpoint({})
     end
-
   end
 
+  describe '#get_puppet_agent_version' do
+
+    context 'when the puppet_agent version is set on an argument' do
+
+      it 'uses host setting over all others' do
+        pa_version = 'pants of the dance'
+        host_arg = { :puppet_agent_version => pa_version }
+        local_options = { :puppet_agent_version => 'something else' }
+        expect( subject.get_puppet_agent_version( host_arg, local_options ) ).to be === pa_version
+      end
+
+      it 'uses local options over all others (except host setting)' do
+        pa_version = 'who did it?'
+        local_options = { :puppet_agent_version => pa_version }
+        expect( subject.get_puppet_agent_version( {}, local_options ) ).to be === pa_version
+      end
+    end
+
+    context 'when the puppet_agent version has to be read dynamically' do
+
+      def test_setup(mock_values={})
+        json_hash    = mock_values[:json_hash]
+        pa_version   = mock_values[:pa_version]
+        pa_version ||= 'pa_version_' + rand(10 ** 5).to_s.rjust(5,'0') # 5 digit random number string
+        json_hash  ||= "{ \"values\": { \"aio_agent_build\": \"#{pa_version}\" }}"
+
+        allow( subject ).to receive( :master ).and_return( {} )
+        result_mock = Object.new
+        allow( result_mock ).to receive( :stdout ).and_return( json_hash )
+        allow( result_mock ).to receive( :exit_code ).and_return( 0 )
+        allow( subject ).to receive( :on ).and_return( result_mock )
+        pa_version
+      end
+
+      it 'parses and returns the command output correctly' do
+        pa_version = test_setup
+        expect( subject.get_puppet_agent_version( {} ) ).to be === pa_version
+      end
+
+      it 'saves the puppet_agent version in the local_options argument' do
+        pa_version = test_setup
+        local_options_hash = {}
+        subject.get_puppet_agent_version( {}, local_options_hash )
+        expect( local_options_hash[:puppet_agent_version] ).to be === pa_version
+      end
+
+      it 'falls back on aio_agent_version if _build is not available' do
+        pa_version = 'your_face_13587'
+        test_setup( :json_hash => "{ \"values\": { \"aio_agent_version\": \"#{pa_version}\" }}" )
+        expect( subject.get_puppet_agent_version( {} ) ).to be === pa_version
+      end
+    end
+
+    context 'failures' do
+
+      def test_setup(mock_values)
+        exit_code   = mock_values[:exit_code] || 0
+        json_hash   = mock_values[:json_hash]
+        pa_version  = 'pa_version_'
+        pa_version << rand(10 ** 5).to_s.rjust(5,'0') # 5 digit random number string
+        json_hash ||= "{ \"values\": { \"aio_agent_build\": \"#{pa_version}\" }}"
+
+        allow( subject ).to receive( :master ).and_return( {} )
+        result_mock = Object.new
+        allow( result_mock ).to receive( :stdout ).and_return( json_hash )
+        allow( result_mock ).to receive( :exit_code ).and_return( exit_code )
+        allow( subject ).to receive( :on ).and_return( result_mock )
+      end
+
+      it 'fails if "puppet facts" does not succeed' do
+        test_setup( :exit_code => 1 )
+        expect { subject.get_puppet_agent_version( {} ) }.to raise_error( ArgumentError )
+      end
+
+      it 'fails if neither fact exists' do
+        test_setup( :json_hash => "{ \"values\": {}}" )
+        expect { subject.get_puppet_agent_version( {} ) }.to raise_error( ArgumentError )
+      end
+    end
+  end
 end
