@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 22 Nov, 2016 (4b812f78)](#LATEST)
+* [LATEST - 20 Dec, 2016 (80c18a2b)](#LATEST)
+* [1.6.1 - 22 Nov, 2016 (52e30609)](#1.6.1)
 * [1.6.0 - 16 Nov, 2016 (0da1b64c)](#1.6.0)
 * [1.5.0 - 7 Nov, 2016 (24d78992)](#1.5.0)
 * [1.4.0 - 11 Oct, 2016 (6becdbb2)](#1.4.0)
@@ -25,7 +26,53 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 22 Nov, 2016 (4b812f78)
+### <a name = "LATEST">LATEST - 20 Dec, 2016 (80c18a2b)
+
+* (GEM) update beaker-pe version to 1.7.0 (80c18a2b)
+
+* Merge pull request #44 from kevpl/maint_version_fix (a1a01605)
+
+
+```
+Merge pull request #44 from kevpl/maint_version_fix
+
+(MAINT) fix broken version number
+```
+* (MAINT) fix broken version number (46340fb7)
+
+
+```
+(MAINT) fix broken version number
+
+[skip ci]
+```
+* Merge pull request #19 from kevpl/bkr831_install_windows (415d3f3c)
+
+
+```
+Merge pull request #19 from kevpl/bkr831_install_windows
+
+(BKR-831) added dynamic puppet-agent version read from master
+```
+* Merge pull request #42 from kevpl/maint_fix_specs (e185d0da)
+
+
+```
+Merge pull request #42 from kevpl/maint_fix_specs
+
+(MAINT) fix spec testing
+```
+* (MAINT) fix spec testing (9dc8b8d7)
+
+* (BKR-831) add fallback to aio_agent_version (d42ef8ef)
+
+* (BKR-831) cleaned up host preparation for installs (f544d6aa)
+
+* (BKR-831) added dynamic puppet-agent version read from master (76d2f9a7)
+
+### <a name = "1.6.1">1.6.1 - 22 Nov, 2016 (52e30609)
+
+* (HISTORY) update beaker-pe history for gem release 1.6.1 (52e30609)
 
 * (GEM) update beaker-pe version to 1.6.1 (4b812f78)
 
