@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 20 Dec, 2016 (80c18a2b)](#LATEST)
+* [LATEST - 30 Dec, 2016 (75d22036)](#LATEST)
+* [1.7.0 - 20 Dec, 2016 (99e6bbde)](#1.7.0)
 * [1.6.1 - 22 Nov, 2016 (52e30609)](#1.6.1)
 * [1.6.0 - 16 Nov, 2016 (0da1b64c)](#1.6.0)
 * [1.5.0 - 7 Nov, 2016 (24d78992)](#1.5.0)
@@ -26,7 +27,36 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 20 Dec, 2016 (80c18a2b)
+### <a name = "LATEST">LATEST - 30 Dec, 2016 (75d22036)
+
+* (GEM) update beaker-pe version to 1.8.0 (75d22036)
+
+* (PE-18728) Skip frictionless install if agent is affected by powershell 2 bug (#45) (48b3b788)
+
+
+```
+(PE-18728) Skip frictionless install if agent is affected by powershell 2 bug (#45)
+
+We introduced frictionless installs for Windows agents in PE 2016.4.0.
+For upgrade scenarios where we are testing frictionless upgrades, to
+install we need to use the old MSI method if we are installing less then
+PE 2016.4.0.
+However, we have discovered that frictionless installs of windows2008r2
+will fail on PE 2016.4.0 and PE 2016.4.2.
+This PR adds in logic to install with the non-frictionless method if the
+agent is windows2008r2 and version is less then PE 2016.4.3.
+```
+* (MAINT) add install PE doc (#41) (2e748b9c)
+
+
+```
+(MAINT) add install PE doc (#41)
+
+[skip ci]
+```
+### <a name = "1.7.0">1.7.0 - 20 Dec, 2016 (99e6bbde)
+
+* (HISTORY) update beaker-pe history for gem release 1.7.0 (99e6bbde)
 
 * (GEM) update beaker-pe version to 1.7.0 (80c18a2b)
 
