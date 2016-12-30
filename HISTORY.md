@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 30 Dec, 2016 (75d22036)](#LATEST)
+* [LATEST - 30 Dec, 2016 (7a9c2c4a)](#LATEST)
+* [1.8.0 - 30 Dec, 2016 (5a37fef7)](#1.8.0)
 * [1.7.0 - 20 Dec, 2016 (99e6bbde)](#1.7.0)
 * [1.6.1 - 22 Nov, 2016 (52e30609)](#1.6.1)
 * [1.6.0 - 16 Nov, 2016 (0da1b64c)](#1.6.0)
@@ -27,7 +28,23 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 30 Dec, 2016 (75d22036)
+### <a name = "LATEST">LATEST - 30 Dec, 2016 (7a9c2c4a)
+
+* (GEM) update beaker-pe version to 1.8.1 (7a9c2c4a)
+
+* (BKR-831) Remove aio_agent_build as version source (#46) (2267d3a2)
+
+
+```
+(BKR-831) Remove aio_agent_build as version source (#46)
+
+This commit removes the `aio_agent_build` fact as a data source for
+the `get_puppet_agent_version`. If the version is not specified, then
+then only the `aio_agent_version` value is used as a fail over.
+```
+### <a name = "1.8.0">1.8.0 - 30 Dec, 2016 (5a37fef7)
+
+* (HISTORY) update beaker-pe history for gem release 1.8.0 (5a37fef7)
 
 * (GEM) update beaker-pe version to 1.8.0 (75d22036)
 
