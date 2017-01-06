@@ -1,6 +1,7 @@
 # default - History
 ## Tags
-* [LATEST - 30 Dec, 2016 (7a9c2c4a)](#LATEST)
+* [LATEST - 6 Jan, 2017 (93ef8841)](#LATEST)
+* [1.8.1 - 30 Dec, 2016 (3cefad28)](#1.8.1)
 * [1.8.0 - 30 Dec, 2016 (5a37fef7)](#1.8.0)
 * [1.7.0 - 20 Dec, 2016 (99e6bbde)](#1.7.0)
 * [1.6.1 - 22 Nov, 2016 (52e30609)](#1.6.1)
@@ -28,7 +29,27 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 30 Dec, 2016 (7a9c2c4a)
+### <a name = "LATEST">LATEST - 6 Jan, 2017 (93ef8841)
+
+* (GEM) update beaker-pe version to 1.8.2 (93ef8841)
+
+* PE-19086 Change extend gpg key to ignore gpg key warnings (#47) (45d907e6)
+
+
+```
+PE-19086 Change extend gpg key to ignore gpg key warnings (#47)
+
+The extended GPG-key for PE 2015.2 -> 2016.1.2 has expired.
+Rather then continue to update it every few months, lets just
+enable the older versions of PE that are installed on debian
+systems to ignore gpg-key warnings.
+We will still have testing coverage of the gpg-key on debian
+systems via fresh installs of PE and testing upgrades from
+PE 2016.2.0 and newer.
+```
+### <a name = "1.8.1">1.8.1 - 30 Dec, 2016 (3cefad28)
+
+* (HISTORY) update beaker-pe history for gem release 1.8.1 (3cefad28)
 
 * (GEM) update beaker-pe version to 1.8.1 (7a9c2c4a)
 
