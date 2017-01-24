@@ -289,7 +289,14 @@ module Beaker
         # @param [Host] host The host to install pacakges for
         # @api private
         def deploy_frictionless_to_master(host)
-          klass = host['platform'].gsub(/-/, '_').gsub(/\./,'')
+          platform = host['platform']
+
+          # We don't have a separate AIX 7.2 build, so it is
+          # classified as 7.1 for pe_repo purposes
+          if platform == "aix-7.2-power"
+            platform = "aix-7.1-power"
+          end
+          klass = platform.gsub(/-/, '_').gsub(/\./,'')
           if host['platform'] =~ /windows/
             if host['template'] =~ /i386/
               klass = "pe_repo::platform::windows_i386"
