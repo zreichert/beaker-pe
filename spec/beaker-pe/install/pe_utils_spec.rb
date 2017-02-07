@@ -416,6 +416,104 @@ describe ClassMixedWithDSLInstallUtils do
     end
   end
 
+  describe 'register_feature_flags!' do
+    it 'does nothing if no flag is set' do
+      expect(subject.register_feature_flags!(opts)).to eq(opts)
+      expect(opts[:answers]).to be_nil
+    end
+
+    context 'with flag set' do
+      before(:each) do
+        ENV['PE_MODULES_NEXT'] = 'true'
+      end
+
+      after(:each) do
+        ENV.delete('PE_MODULES_NEXT')
+      end
+
+      it 'updates answers' do
+        expect(subject.register_feature_flags!(opts)).to match(opts.merge({
+          :answers => {
+            :feature_flags => {
+              :pe_modules_next => true
+            }
+          }
+        }))
+      end
+
+      context 'and answer explicitly set' do
+        let(:answers) do
+          {
+            :answers => {
+              'feature_flags' => {
+                'pe_modules_next' => false
+              }
+            }
+          }
+        end
+
+        before(:each) do
+          opts.merge!(answers)
+        end
+
+        it 'keeps explicit setting' do
+          expect(subject.register_feature_flags!(opts)).to match(opts.merge(answers))
+        end
+      end
+    end
+  end
+
+  describe 'feature_flag?' do
+
+    context 'without :answers' do
+      it 'is nil for pe_modules_next' do
+        expect(subject.feature_flag?('pe_modules_next', opts)).to eq(nil)
+        expect(subject.feature_flag?(:pe_modules_next, opts)).to eq(nil)
+      end
+    end
+
+    context 'with :answers but no flag' do
+      before(:each) do
+        opts[:answers] = {}
+      end
+
+      it 'is nil for pe_modules_next' do
+        expect(subject.feature_flag?('pe_modules_next', opts)).to eq(nil)
+        expect(subject.feature_flag?(:pe_modules_next, opts)).to eq(nil)
+      end
+    end
+
+    context 'with answers set' do
+      let(:options) do
+        opts.merge(
+          :answers => {
+            'feature_flags' => {
+              'pe_modules_next' => flag
+            }
+          }
+        )
+      end
+
+      context 'false' do
+        let(:flag) { false }
+        it { expect(subject.feature_flag?('pe_modules_next', options)).to eq(false) }
+        it { expect(subject.feature_flag?(:pe_modules_next, options)).to eq(false) }
+      end
+
+      context 'true' do
+        let(:flag) { true }
+        it { expect(subject.feature_flag?('pe_modules_next', options)).to eq(true) }
+        it { expect(subject.feature_flag?(:pe_modules_next, options)).to eq(true) }
+
+        context 'as string' do
+          let(:flag) { 'true' }
+          it { expect(subject.feature_flag?('pe_modules_next', options)).to eq(true) }
+          it { expect(subject.feature_flag?(:pe_modules_next, options)).to eq(true) }
+        end
+      end
+    end
+  end
+
   describe 'setup_beaker_answers_opts' do
     let(:opts) { {} }
     let(:host) { hosts.first }
@@ -443,6 +541,28 @@ describe ClassMixedWithDSLInstallUtils do
             :include_legacy_database_defaults => false,
           )
         )
+      end
+
+      context 'with pe-modules-next' do
+        let(:options) do
+          opts.merge(
+            :answers => {
+              :feature_flags => {
+                :pe_modules_next => true
+              }
+            }
+          )
+        end
+
+        it 'adds meep_schema_version' do
+          expect(subject.setup_beaker_answers_opts(host, options)).to eq(
+            options.merge(
+              :format => :hiera,
+              :include_legacy_database_defaults => false,
+              :meep_schema_version => '2.0',
+            )
+          )
+        end
       end
 
       context 'when upgrading' do

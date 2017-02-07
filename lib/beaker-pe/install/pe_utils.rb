@@ -1,6 +1,7 @@
 [ 'aio_defaults', 'pe_defaults', 'puppet_utils', 'windows_utils' ].each do |lib|
     require "beaker/dsl/install_utils/#{lib}"
 end
+require 'beaker-pe/install/feature_flags'
 require "beaker-answers"
 require "timeout"
 require "json"
@@ -119,13 +120,9 @@ module Beaker
               pe_cmd += " -y"
             end
 
-            # This is a temporary workaround for PE-18516, because MEEP does not yet create a 2.0
-            # pe.conf when recovering configuration in Flanders. This will be fixed in PE-18170.
-            if opts[:type] == :upgrade && !version_is_less(host['pe_upgrade_ver'], '2017.1.0')
-              "#{pe_cmd} #{host['pe_installer_conf_setting']}"
             # If there are no answer overrides, and we are doing an upgrade from 2016.2.0,
             # we can assume there will be a valid pe.conf in /etc that we can re-use.
-            elsif opts[:answers].nil? && opts[:custom_answers].nil? && opts[:type] == :upgrade && !version_is_less(opts[:HOSTS][host.name][:pe_ver], '2016.2.0')
+            if opts[:answers].nil? && opts[:custom_answers].nil? && opts[:type] == :upgrade && !version_is_less(opts[:HOSTS][host.name][:pe_ver], '2016.2.0')
               "#{pe_cmd}"
             else
               "#{pe_cmd} #{host['pe_installer_conf_setting']}"
@@ -449,6 +446,7 @@ module Beaker
                 setup_defaults_and_config_helper_on(host, master, acceptable_codes)
               else
                 prepare_host_installer_options(host)
+                register_feature_flags!(opts)
                 generate_installer_conf_file_for(host, hosts, opts)
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
@@ -618,6 +616,19 @@ module Beaker
           !version_is_less(version, MEEP_CUTOVER_VERSION)
         end
 
+        # Tests if a feature flag has been set in the answers hash provided to beaker
+        # options. Assumes a 'feature_flags' hash is present in the answers and looks for
+        # +flag+ within it.
+        #
+        # @param flag String flag to lookup
+        # @param opts Hash options hash to inspect
+        # @return true if +flag+ is true or 'true' in the feature_flags hash,
+        #   false otherwise. However, returns nil if there is no +flag+ in the
+        #   answers hash at all
+        def feature_flag?(flag, opts)
+          Beaker::DSL::InstallUtils::FeatureFlags.new(opts).flag?(flag)
+        end
+
         # Check if windows host is able to frictionlessly install puppet
         # @param [Beaker::Host] host that we are checking if it is possible to install frictionlessly to
         # @return [Boolean] true if frictionless is supported and not affected by known bugs
@@ -684,7 +695,39 @@ module Beaker
           beaker_answers_opts[:include_legacy_database_defaults] =
             opts[:type] == :upgrade && !use_meep?(host['previous_pe_ver'])
 
-          opts.merge(beaker_answers_opts)
+          modified_opts = opts.merge(beaker_answers_opts)
+
+          if feature_flag?('pe_modules_next', opts) && !modified_opts.include?(:meep_schema_version)
+            modified_opts[:meep_schema_version] = '2.0'
+          end
+
+          modified_opts
+        end
+
+        # The pe-modules-next package is being used for isolating large scale
+        # feature development of PE module code. The feature flag is a pe.conf
+        # setting 'feature_flags::pe_modules_next', which if set true will
+        # cause the installer shim to install the pe-modules-next package
+        # instead of pe-modules.
+        #
+        # This answer can be explicitly added to Beaker's cfg file by adding it
+        # to the :answers section.
+        #
+        # But it can also be picked up transparently from CI via the
+        # PE_MODULES_NEXT environment variable.  If this is set 'true', then
+        # the opts[:answers] will be set with feature_flags::pe_modules_next.
+        #
+        # Answers set in Beaker's config file will take precedence over the
+        # environment variable.
+        #
+        # NOTE: This has implications for upgrades, because upgrade testing
+        # will need the flag, but upgrades from different pe.conf schema (or no
+        # pe.conf) will need to generate a pe.conf, and that workflow is likely
+        # to happen in the installer shim.  If we simply supply a good pe.conf
+        # via beaker-answers, then we have bypassed the pe.conf generation
+        # aspect of the upgrade workflow. (See PE-19438)
+        def register_feature_flags!(opts)
+          Beaker::DSL::InstallUtils::FeatureFlags.new(opts).register_flags!
         end
 
         # Generates a Beaker Answers object for the passed *host* and creates
