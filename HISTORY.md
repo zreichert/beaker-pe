@@ -1,6 +1,7 @@
-# default - History
+# worker - History
 ## Tags
-* [LATEST - 6 Jan, 2017 (93ef8841)](#LATEST)
+* [LATEST - 7 Feb, 2017 (d5c96d6b)](#LATEST)
+* [1.8.2 - 6 Jan, 2017 (625c17e3)](#1.8.2)
 * [1.8.1 - 30 Dec, 2016 (3cefad28)](#1.8.1)
 * [1.8.0 - 30 Dec, 2016 (5a37fef7)](#1.8.0)
 * [1.7.0 - 20 Dec, 2016 (99e6bbde)](#1.7.0)
@@ -29,7 +30,85 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 6 Jan, 2017 (93ef8841)
+### <a name = "LATEST">LATEST - 7 Feb, 2017 (d5c96d6b)
+
+* (GEM) update beaker-pe version to 1.9.0 (d5c96d6b)
+
+* (PE-19169) Add pe modules next flag (#55) (3ff8a996)
+
+
+```
+(PE-19169) Add pe modules next flag (#55)
+
+* (PE-19169,PE-18516) Remove version specific upgrade hack
+
+This had been added to allow upgrade testing in flanders with meep for
+classification prior to our having completed an upgrade workflow in the
+installer.
+
+Now that meep is being worked on in the pe-modules-next package behind a
+feature-flag, this gate is counter-productive, particularly for Flanders
+upgrade testing because it masks the common case of upgrading without
+specifying a pe.conf.
+
+* (PE-19169) Register flag for pe-modules-next if present in ENV
+
+Major PE modules development work is being done in a separate
+pe-modules-next package. The installer shim decides which pe-modules
+package to install based on a pe.conf flag. This patch allows Jenkins CI
+to trigger this by picking up ENV['PE_MODULES_NEXT'] and ensure that the
+flag is set in the opts[:answers] which will then be transferred to
+pe.conf by beaker-answers, and then picked up by the installer shim
+during installation.
+
+* (PE-19169) Ensure beaker-answers generates meep 2.0 schema
+
+...if we are installing with the pe_modules_next flag.
+
+The pe-modules-next is meep classification at the moment and needs a 2.0
+pe.conf generated.
+
+* (PE-19169) Extract a FeatureFlags class
+
+to make it easier to test. Flags can be set in the :answers Hash or
+picked up from environment variables. In the later case, we need to be
+able to preserver them in the :answers hash, if not already present, so
+that BeakerAnswers ensures that they are set in the generated pe.conf
+file.
+```
+* Merge pull request #54 from branan/bkr-937-aix-7.2 (4e381151)
+
+
+```
+Merge pull request #54 from branan/bkr-937-aix-7.2
+
+(BKR-937) Add support for installing AIX 7 agent on 7.2
+```
+* (maint) login_with_puppet_access_on should respect --lifetime flag (with spec tests) (#52) (c17a8daf)
+
+
+```
+(maint) login_with_puppet_access_on should respect --lifetime flag (with spec tests) (#52)
+
+* (maint) fix puppet access helper to respect lifetime argument
+
+* (maint) Add spec tests for login_with_puppet_access_on
+```
+* (BKR-937) Add support for installing AIX 7 agent on 7.2 (9aada073)
+
+
+```
+(BKR-937) Add support for installing AIX 7 agent on 7.2
+
+To avoid unnecessarily expanding our build times, our initial support
+for AIX 7.2 is through the existing 7.1 package. This will be replaced
+with a single unified AIX build in the Agent 2.0 timeframe, but for now
+we need to add a little bit of special-case logic to handle 7.2 with
+existing packages.
+```
+### <a name = "1.8.2">1.8.2 - 6 Jan, 2017 (625c17e3)
+
+* (HISTORY) update beaker-pe history for gem release 1.8.2 (625c17e3)
 
 * (GEM) update beaker-pe version to 1.8.2 (93ef8841)
 
