@@ -511,7 +511,7 @@ module Beaker
             end
 
             # PE-18799 replace the version_is_less with a use_meep_for_classification? test
-            if !version_is_less(master[:pe_ver], '2017.1.0')
+            if use_meep_for_classification?(master[:pe_ver], options)
               configure_puppet_agent_service(:ensure => 'stopped', :enabled => false)
             end
 
