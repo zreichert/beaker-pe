@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 7 Feb, 2017 (d5c96d6b)](#LATEST)
+* [LATEST - 22 Feb, 2017 (e2c53400)](#LATEST)
+* [1.9.0 - 7 Feb, 2017 (efae323b)](#1.9.0)
 * [1.8.2 - 6 Jan, 2017 (625c17e3)](#1.8.2)
 * [1.8.1 - 30 Dec, 2016 (3cefad28)](#1.8.1)
 * [1.8.0 - 30 Dec, 2016 (5a37fef7)](#1.8.0)
@@ -30,7 +31,23 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 7 Feb, 2017 (d5c96d6b)
+### <a name = "LATEST">LATEST - 22 Feb, 2017 (e2c53400)
+
+* (GEM) update beaker-pe version to 1.9.1 (e2c53400)
+
+* Merge pull request #58 from kevpl/maint_stop_waiting_for_host (2a3fd63e)
+
+
+```
+Merge pull request #58 from kevpl/maint_stop_waiting_for_host
+
+(MAINT) remove wait_for_host_in_dashboard call
+```
+* (MAINT) remove wait_for_host_in_dashboard call (f6d3ee4a)
+
+### <a name = "1.9.0">1.9.0 - 7 Feb, 2017 (efae323b)
+
+* (HISTORY) update beaker-pe history for gem release 1.9.0 (efae323b)
 
 * (GEM) update beaker-pe version to 1.9.0 (d5c96d6b)
 
