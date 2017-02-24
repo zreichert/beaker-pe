@@ -131,9 +131,11 @@ module Beaker
               pe_cmd += " -y"
             end
 
-            # If there are no answer overrides, and we are doing an upgrade from 2016.2.0,
+            # If we are doing an upgrade from 2016.2.0,
             # we can assume there will be a valid pe.conf in /etc that we can re-use.
-            if opts[:answers].nil? && opts[:custom_answers].nil? && opts[:type] == :upgrade && !version_is_less(opts[:HOSTS][host.name][:pe_ver], '2016.2.0')
+            # We also expect that any custom_answers specified to beaker have been
+            # added to the pe.conf in /etc.
+            if opts[:type] == :upgrade && use_meep?(host[:previous_pe_ver])
               "#{pe_cmd}"
             else
               "#{pe_cmd} #{host['pe_installer_conf_setting']}"
@@ -450,9 +452,36 @@ module Beaker
               else
                 prepare_host_installer_options(host)
                 register_feature_flags!(opts)
-                generate_installer_conf_file_for(host, hosts, opts)
+
+                enterprise_path = '/etc/puppetlabs/enterprise'
+                local_path = 'pe_conf'
+                if opts[:type] == :upgrade && use_meep?(host['previous_pe_ver'])
+                  # In this scenario, Beaker runs the installer such that we make
+                  # use of recovery code in the configure face of the installer.
+                  if host['roles'].include?('master')
+                    # merge answers into pe.conf
+                    if opts[:answers] && !opts[:answers].empty?
+                      update_pe_conf(opts[:answers])
+                    end
+
+                    if opts[:custom_answers] && !opts[:custom_answers].empty?
+                      update_pe_conf(opts[:custom_answers])
+                    end
+                  else
+                    # scp conf.d to host
+                    scp_to(host, "#{local_path}/conf.d", enterprise_path)
+                  end
+                else
+                  # Beaker creates a fresh pe.conf using beaker-answers, as if we were doing an install
+                  generate_installer_conf_file_for(host, hosts, opts)
+                end
+
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
+                if host['roles'].include?('master')
+                  # scp conf.d over from master
+                  scp_from(host, "#{enterprise_path}/conf.d", local_path)
+                end
               end
             end
             # On each agent, we ensure the certificate is signed
@@ -960,6 +989,7 @@ module Beaker
             hosts.each do |host|
               prep_host_for_upgrade(host, opts, path)
             end
+
             do_install(sorted_hosts, opts.merge({:type => :upgrade, :set_console_password => set_console_password}))
             opts['upgrade'] = true
           end
