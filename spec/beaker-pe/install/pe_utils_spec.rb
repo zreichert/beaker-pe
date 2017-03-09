@@ -897,6 +897,8 @@ describe ClassMixedWithDSLInstallUtils do
       allow( subject ).to receive( :hosts ).and_return( hosts )
       #create answers file per-host, except windows
       expect( subject ).to receive( :create_remote_file ).with( hosts[0], /answers/, /q/ ).once
+      # copy the pe.conf
+      expect( subject ).to receive( :scp_from ).and_return(true)
       #run installer on all hosts
       expect( subject ).to receive( :on ).with( hosts[0], /puppet-enterprise-installer/ ).once
       expect( subject ).to receive( :install_msi_on ).with ( any_args ) do | host, msi_path, msi_opts, opts |
@@ -1041,6 +1043,7 @@ describe ClassMixedWithDSLInstallUtils do
         allow( subject ).to receive( :configure_type_defaults_on ).with( host )
       end
 
+      expect( subject ).to receive( :scp_from ).and_return(true)
       subject.do_install( hosts, opts )
     end
 
@@ -1106,6 +1109,7 @@ describe ClassMixedWithDSLInstallUtils do
         allow( subject ).to receive( :configure_type_defaults_on ).with( host )
       end
 
+      expect( subject ).to receive( :scp_from ).and_return(true)
       subject.do_install( hosts, opts )
     end
 
@@ -1176,6 +1180,7 @@ describe ClassMixedWithDSLInstallUtils do
         allow( subject ).to receive( :configure_type_defaults_on ).with( host )
       end
 
+      expect( subject ).to receive( :scp_from ).and_return(true)
       subject.do_install( hosts, opts )
     end
 
