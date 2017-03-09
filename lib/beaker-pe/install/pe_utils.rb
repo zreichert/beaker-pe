@@ -37,6 +37,7 @@ module Beaker
         MEEP_DATA_DIR = '/etc/puppetlabs/enterprise'
         PE_CONF_FILE = "#{MEEP_DATA_DIR}/conf.d/pe.conf"
         NODE_CONF_PATH = "#{MEEP_DATA_DIR}/conf.d/nodes"
+        BEAKER_MEEP_TMP = "pe_conf"
 
         # @!macro [new] common_opts
         #   @param [Hash{Symbol=>String}] opts Options to alter execution.
@@ -452,36 +453,11 @@ module Beaker
               else
                 prepare_host_installer_options(host)
                 register_feature_flags!(opts)
-
-                enterprise_path = '/etc/puppetlabs/enterprise'
-                local_path = 'pe_conf'
-                if opts[:type] == :upgrade && use_meep?(host['previous_pe_ver'])
-                  # In this scenario, Beaker runs the installer such that we make
-                  # use of recovery code in the configure face of the installer.
-                  if host['roles'].include?('master')
-                    # merge answers into pe.conf
-                    if opts[:answers] && !opts[:answers].empty?
-                      update_pe_conf(opts[:answers])
-                    end
-
-                    if opts[:custom_answers] && !opts[:custom_answers].empty?
-                      update_pe_conf(opts[:custom_answers])
-                    end
-                  else
-                    # scp conf.d to host
-                    scp_to(host, "#{local_path}/conf.d", enterprise_path)
-                  end
-                else
-                  # Beaker creates a fresh pe.conf using beaker-answers, as if we were doing an install
-                  generate_installer_conf_file_for(host, hosts, opts)
-                end
+                setup_pe_conf(host, hosts, opts)
 
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
-                if host['roles'].include?('master')
-                  # scp conf.d over from master
-                  scp_from(host, "#{enterprise_path}/conf.d", local_path)
-                end
+                download_pe_conf_if_master(host)
               end
             end
             # On each agent, we ensure the certificate is signed
@@ -1322,6 +1298,42 @@ module Beaker
               on(master, "chown pe-puppet #{node_conf_file}")
             end
             update_pe_conf(parameters, node_conf_file)
+          end
+        end
+
+        def setup_pe_conf(host, hosts, opts={})
+          if opts[:type] == :upgrade && use_meep?(host['previous_pe_ver'])
+            # In this scenario, Beaker runs the installer such that we make
+            # use of recovery code in the configure face of the installer.
+            if host['roles'].include?('master')
+              step "Updating #{MEEP_DATA_DIR}/conf.d with answers/custom_answers" do
+                # merge answers into pe.conf
+                if opts[:answers] && !opts[:answers].empty?
+                  update_pe_conf(opts[:answers])
+                end
+
+                if opts[:custom_answers] && !opts[:custom_answers].empty?
+                  update_pe_conf(opts[:custom_answers])
+                end
+              end
+            else
+              step "Uploading #{BEAKER_MEEP_TMP}/conf.d that was generated on the master" do
+                # scp conf.d to host
+                scp_to(host, "#{BEAKER_MEEP_TMP}/conf.d", MEEP_DATA_DIR)
+              end
+            end
+          else
+            # Beaker creates a fresh pe.conf using beaker-answers, as if we were doing an install
+            generate_installer_conf_file_for(host, hosts, opts)
+          end
+        end
+
+        def download_pe_conf_if_master(host)
+          if host['roles'].include?('master')
+            step "Downloading generated #{MEEP_DATA_DIR}/conf.d locally" do
+              # scp conf.d over from master
+              scp_from(host, "#{MEEP_DATA_DIR}/conf.d", BEAKER_MEEP_TMP)
+            end
           end
         end
       end
