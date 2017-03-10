@@ -1099,10 +1099,10 @@ module Beaker
         # Being able to modify PE's classifier requires the Scooter gem and
         # helpers which are in beaker-pe-large-environments.
         def get_console_dispatcher_for_beaker_pe(raise_exception = false)
+          # XXX RE-8616, once scooter is public, we can remove this and just
+          # reference ConsoleDispatcher directly.
           if !respond_to?(:get_dispatcher)
             begin
-              # just in case scooter is present but beaker-pe-large-environments is not
-              # ...most likely this will raise a LoadError...
               require 'scooter'
               Scooter::HttpDispatchers::ConsoleDispatcher.new(dashboard)
             rescue LoadError => e
