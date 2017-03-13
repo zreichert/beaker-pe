@@ -295,10 +295,13 @@ module Beaker
           end
         end
 
-        #Classify the master so that it can deploy frictionless packages for a given host.
+        #Classify the master so that it can deploy frictionless packages for a given host. 
+        #This function does nothing when using meep for classification.
         # @param [Host] host The host to install pacakges for
         # @api private
         def deploy_frictionless_to_master(host)
+          return if use_meep_for_classification?(master[:pe_ver], options)
+
           platform = host['platform']
 
           # We don't have a separate AIX 7.2 build, so it is
