@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 22 Feb, 2017 (e2c53400)](#LATEST)
+* [LATEST - 20 Mar, 2017 (a796b850)](#LATEST)
+* [1.9.1 - 22 Feb, 2017 (3b0bd457)](#1.9.1)
 * [1.9.0 - 7 Feb, 2017 (efae323b)](#1.9.0)
 * [1.8.2 - 6 Jan, 2017 (625c17e3)](#1.8.2)
 * [1.8.1 - 30 Dec, 2016 (3cefad28)](#1.8.1)
@@ -31,7 +32,234 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 22 Feb, 2017 (e2c53400)
+### <a name = "LATEST">LATEST - 20 Mar, 2017 (a796b850)
+
+* (GEM) update beaker-pe version to 1.10.0 (a796b850)
+
+* Merge pull request #59 from jpartlow/pe-modules-next (b130ad2f)
+
+
+```
+Merge pull request #59 from jpartlow/pe-modules-next
+
+(PE-19049)  Add a meep classification feature flag
+```
+* Merge branch 'issue/flanders/pe-19049-add-meep-classification-feature-flag' into pe-modules-next (f9b3ecd5)
+
+
+```
+Merge branch 'issue/flanders/pe-19049-add-meep-classification-feature-flag' into pe-modules-next
+
+* issue/flanders/pe-19049-add-meep-classification-feature-flag:
+  (PE-19831) Remove pe_repo classes from meep classification
+  (PE-19438) Mock `scp_from` for `do_install`
+  (PE-19438) Move pe.conf setup into descriptive function
+  (PE-19438) Stop passing -c to upgrades from MEEP
+  (PE-19049) Remove get_console_dispatcher_for_beaker_pe specs
+  (PE-19049) use_meep_for_classification for configure_puppet_agent_service
+  (PE-19049) Add helper method to read a hocon key from pe.conf
+  (PE-19049) Add method to create or update a meep node.conf file
+  (PE-19049) Can remove parameters from pe.conf
+  (PE-19049,PE-11353) Ensure puppet service is stopped in 2017.1+ builds
+  (maint) Use a Beaker::Host instance when mocking hosts
+  (PE-19049) Modify how we obtain console dispatcher for frictionless
+  (maint) Require beaker directly in spec_helper
+  (PE-19049,PE-18718,PE-18799) Provide a test method for meep classification
+  (maint) Remove unused variables
+```
+* (PE-19831) Remove pe_repo classes from meep classification (b2b3d9df)
+
+
+```
+(PE-19831) Remove pe_repo classes from meep classification
+
+This commit stops beaker from setting up additional pe_repo platform
+classes on the master node group when using meep for classification as
+this is handled in pe.conf with the agent_platform array with an array
+of platform tags instead.
+```
+* (PE-19049) Remove get_console_dispatcher_for_beaker_pe specs (e3515a02)
+
+
+```
+(PE-19049) Remove get_console_dispatcher_for_beaker_pe specs
+
+Because scooter can in fact be in the bundle based on the GEM_SOURCE
+setting, these specs can break, and it is not worth the effort reworking
+the tests to be conditional based on presence or absence of the scooter
+gem. RE-8616 should make the scooter gem public and then we don't need
+to dance around it like this.
+```
+* (PE-19438) Mock `scp_from` for `do_install` (1353f7bf)
+
+
+```
+(PE-19438) Mock `scp_from` for `do_install`
+
+The new functionality in `do_install` to copy the `conf.d` folder
+```
+* (PE-19438) Move pe.conf setup into descriptive function (80b78e04)
+
+
+```
+(PE-19438) Move pe.conf setup into descriptive function
+
+The `do_install` method was getting a bit cluttered with too many
+levels of logic, so I've moved the pe.conf setup steps out
+into their own method, `setup_pe_conf`
+```
+* Merge pull request #60 from kevpl/docs_pr_template2 (f22ac7fb)
+
+
+```
+Merge pull request #60 from kevpl/docs_pr_template2
+
+(MAINT) add pull request template
+```
+* (MAINT) add pull request template (f730e767)
+
+
+```
+(MAINT) add pull request template
+
+adds a template that will make understanding
+who to ping to get your PR reviewed clearer.
+[skip ci]
+```
+* (PE-19438) Stop passing -c to upgrades from MEEP (2af29a43)
+
+
+```
+(PE-19438) Stop passing -c to upgrades from MEEP
+
+Prior to this commit we were essentially always passing in a config
+to the installer during upgrades because we typically provide some
+sort of custom answers for many tests. This meant that we were not
+really testing upgrades without a config file being passed in.
+This commit updates the beaker to not pass in a config/`-c` option
+on upgrades from a MEEP install. In order to pass in the custom answers,
+I have instead made use of the `update_pe_conf` method to inject the
+answers.
+```
+* (PE-19049) use_meep_for_classification for configure_puppet_agent_service (570694db)
+
+
+```
+(PE-19049) use_meep_for_classification for configure_puppet_agent_service
+
+This commit updates the condition on performing the
+`configure_puppet_agent_service` to be gated with
+`use_meep_for_classification` so that it will automatically be set to
+whatever arbitrary version we activate MEEP on.
+```
+* (PE-19049) Add helper method to read a hocon key from pe.conf (02c0b356)
+
+* (PE-19049) Add method to create or update a meep node.conf file (bb4094ae)
+
+
+```
+(PE-19049) Add method to create or update a meep node.conf file
+
+This is necessary if we need to adjust parameters for a specific node
+rather than for all infrastructure via pe.conf.
+```
+* (PE-19049) Can remove parameters from pe.conf (d4bab316)
+
+
+```
+(PE-19049) Can remove parameters from pe.conf
+
+...using the update_pe_conf function.  Since a null isn't meaningful
+for a hocon lookup parameter in pe.conf (or at least, I can't think of
+why it would be, at the moment), a nil can be used to remove a parameter
+that we want to clean up from the file. It's possible I am overlooking
+something tricky about nil, undef in hiera/lookup...it might be
+applicable to a nodes.conf file where we wanted to clear a parameter on
+a specific node that had been set in pe.conf, but this function only
+applies to pe.conf, so I think this is acceptable for now.
+```
+* (maint) Use a Beaker::Host instance when mocking hosts (7154c008)
+
+
+```
+(maint) Use a Beaker::Host instance when mocking hosts
+
+The mock hosts being generated for tests where failing when :exec was
+called, despite the allow() in the helpers.rb make_host() function.
+Using a Beaker::Host resolved this.
+```
+* (PE-19049,PE-11353) Ensure puppet service is stopped in 2017.1+ builds (ed5d1499)
+
+
+```
+(PE-19049,PE-11353) Ensure puppet service is stopped in 2017.1+ builds
+
+We began managing the puppet service in 2017.1.0 and need to ensure it
+is stopped and disabled after installation, otherwise each subsequent
+puppet agent run will restart the agent service, causing potential havoc
+in smoke tests or other setup steps.
+```
+* (PE-19049) Modify how we obtain console dispatcher for frictionless (858e63a9)
+
+
+```
+(PE-19049) Modify how we obtain console dispatcher for frictionless
+
+platform configuration of the master node. Expect to use the
+beaker-pe-large-environments::classification#get_dispatcher()
+method, which will only be present during a pe_acceptance_tests run,
+when beaker-pe-large-environments is part of the gem bundle.
+```
+* (maint) Require beaker directly in spec_helper (1dbf8198)
+
+
+```
+(maint) Require beaker directly in spec_helper
+
+The individual specs were already requiring beaker. This change just
+centralizes that into the spec_helper, and removes the
+beaker_test_helper now that we are using Beaker 3.
+```
+* (PE-19049,PE-18718,PE-18799) Provide a test method for meep classification (6b9c6184)
+
+
+```
+(PE-19049,PE-18718,PE-18799) Provide a test method for meep classification
+
+so we can adjust tests and setup steps that need to work either with old
+pe node groups, or with meep.
+
+Ultimately the test is just based on version boundary. But while we are
+validating meep classification, we need to be able to toggle around a
+temporary feature flag: the pe_infrastructure::use_meep_for_classification
+parameter.
+
+The function checks to see if this has been passed into
+beaker via the hosts file answers hash. These are answers which
+beaker-answers would include in the pe.conf it generates.
+
+It can also be set from an ENV['PE_USE_MEEP_FOR_CLASSIFICATION']
+variable. This will make it easier to setup temporary ci jobs.
+
+The answer file setting will take precedence over the environment
+variable.
+```
+* (maint) Remove unused variables (7dce71cd)
+
+
+```
+(maint) Remove unused variables
+
+The version variable is not used in the fetch_pe_on_windows method (and
+hopefully wasn't producing a useful side effect...)
+
+The removed snapshot and box keys in HOST_DEFAULTS were being
+overwritten by later keys in the same hash definition and were producing
+warnings...
+```
+### <a name = "1.9.1">1.9.1 - 22 Feb, 2017 (3b0bd457)
+
+* (HISTORY) update beaker-pe history for gem release 1.9.1 (3b0bd457)
 
 * (GEM) update beaker-pe version to 1.9.1 (e2c53400)
 
