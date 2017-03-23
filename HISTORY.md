@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 23 Mar, 2017 (bce6add6)](#LATEST)
+* [LATEST - 23 Mar, 2017 (dd68cfa4)](#LATEST)
+* [1.11.0 - 23 Mar, 2017 (6c3b0067)](#1.11.0)
 * [1.10.0 - 20 Mar, 2017 (22e22ca8)](#1.10.0)
 * [1.9.1 - 22 Feb, 2017 (3b0bd457)](#1.9.1)
 * [1.9.0 - 7 Feb, 2017 (efae323b)](#1.9.0)
@@ -33,7 +34,55 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 23 Mar, 2017 (bce6add6)
+### <a name = "LATEST">LATEST - 23 Mar, 2017 (dd68cfa4)
+
+* (GEM) update beaker-pe version to 1.12.0 (dd68cfa4)
+
+* Merge pull request #57 from nicklewis/improved-monolithic-install (07aa286e)
+
+
+```
+Merge pull request #57 from nicklewis/improved-monolithic-install
+
+(BKR-1058) Implement a simpler monolithic install method
+```
+* (BKR-1058) Implement a simpler monolithic install method (691a101e)
+
+
+```
+(BKR-1058) Implement a simpler monolithic install method
+
+Currently, the `do_install` method is a mega-method responsible for
+installing and upgrading every version, layout, and platform of PE. It
+knows how to handle masterless installs, legacy agent installs, and
+extremely old versions of PE. Because of that legacy, it has some
+inefficiencies and is inflexible.
+
+Since the most common case by far is a simple monolithic or split PE
+install with a set of frictionless agents, we can dramatically simplify
+and therefore speed up the basic case. This commit implements a
+determine_install_type method that will detect whether the task being
+asked of it is one of those simple cases. The `do_install` method now
+branches based on the type of install, calling
+`simple_monolithic_install` for a basic monolithic + agents install, or
+`generic_install` for everything else. Simple split installs are
+currently detected, but not handled specially (they still fall back to
+the generic install).
+
+Doing away with some of the legacy concerns allows this method to be
+much simpler and more efficient. In particular, because the method has a
+defined task (mono master + agents, rather than a generic list of
+hosts), it can be optimized around that task. This is accomplished now
+by first installing the master, and then installing all the agents in
+parallel. This method also removes an extra agent run that hasn't been
+necessary since PE 3.3.
+
+For a monolithic master with four frictionless agents, this new method
+takes ~6 min 30 sec, compared to ~11 minutes before.
+```
+### <a name = "1.11.0">1.11.0 - 23 Mar, 2017 (6c3b0067)
+
+* (HISTORY) update beaker-pe history for gem release 1.11.0 (6c3b0067)
 
 * (GEM) update beaker-pe version to 1.11.0 (bce6add6)
 
