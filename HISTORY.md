@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 20 Mar, 2017 (a796b850)](#LATEST)
+* [LATEST - 23 Mar, 2017 (bce6add6)](#LATEST)
+* [1.10.0 - 20 Mar, 2017 (22e22ca8)](#1.10.0)
 * [1.9.1 - 22 Feb, 2017 (3b0bd457)](#1.9.1)
 * [1.9.0 - 7 Feb, 2017 (efae323b)](#1.9.0)
 * [1.8.2 - 6 Jan, 2017 (625c17e3)](#1.8.2)
@@ -32,7 +33,34 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 20 Mar, 2017 (a796b850)
+### <a name = "LATEST">LATEST - 23 Mar, 2017 (bce6add6)
+
+* (GEM) update beaker-pe version to 1.11.0 (bce6add6)
+
+* Merge pull request #63 from shaigy/PE-19888-add-workaround-for-console-status-check-error-in-2016.1.1 (635224a5)
+
+
+```
+Merge pull request #63 from shaigy/PE-19888-add-workaround-for-console-status-check-error-in-2016.1.1
+
+PE-19888 Add workaround for 2016.1.1 console status check error
+```
+* PE-19888 Add workaround for 2016.1.1 console service status check error (6cd41e45)
+
+
+```
+PE-19888 Add workaround for 2016.1.1 console service status check error
+
+During installation, a classifier-service check is done in beaker-pe
+to make sure console service is up and running. The classifier status
+service at the default detail level is broken in 2016.1.1 (PE-14857)
+and returns an error and state "unknown". The workaround is to query
+the classifier-service at 'critical' level and check for the console
+service status.
+```
+### <a name = "1.10.0">1.10.0 - 20 Mar, 2017 (22e22ca8)
+
+* (HISTORY) update beaker-pe history for gem release 1.10.0 (22e22ca8)
 
 * (GEM) update beaker-pe version to 1.10.0 (a796b850)
 
