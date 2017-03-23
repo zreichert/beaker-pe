@@ -879,9 +879,14 @@ module Beaker
           return true if version_is_less(host['pe_ver'], '2015.2.0')
 
           attempts_limit = options[:pe_console_status_attempts] || 9
+          # Workaround for PE-14857. The classifier status service at the
+          # default level is broken in 2016.1.1. Instead we need to query
+          # the classifier service at critical level and check for service
+          # status
+          query_params = (host['pe_ver'] == '2016.1.1' ? '?level=critical' : '')
           step 'Check Console Status Endpoint' do
             match = repeat_fibonacci_style_for(attempts_limit) do
-              output = on(host, "curl -s -k https://localhost:4433/status/v1/services --cert /etc/puppetlabs/puppet/ssl/certs/#{host}.pem --key /etc/puppetlabs/puppet/ssl/private_keys/#{host}.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem", :accept_all_exit_codes => true)
+              output = on(host, "curl -s -k https://localhost:4433/status/v1/services#{query_params} --cert /etc/puppetlabs/puppet/ssl/certs/#{host}.pem --key /etc/puppetlabs/puppet/ssl/private_keys/#{host}.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem", :accept_all_exit_codes => true)
               begin
                 output = JSON.parse(output.stdout)
                 match = output['classifier-service']['state'] == 'running'

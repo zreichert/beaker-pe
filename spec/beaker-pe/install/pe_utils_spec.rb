@@ -1488,6 +1488,16 @@ describe ClassMixedWithDSLInstallUtils do
       subject.check_console_status_endpoint({})
     end
 
+    it 'add query param to curling url if version is 2016.1.1' do
+      unixhost[:pe_ver] = '2016.1.1'
+      allow(subject).to receive(:options).and_return({})
+      allow(subject).to receive(:version_is_less).and_return(false)
+      json_hash = '{ "classifier-service": { "state": "running" }, "rbac-service": { "state": "running" }, "activity-service":  { "state": "running" } }'
+      result = double(Beaker::Result, :stdout => "#{json_hash}")
+      expect(subject).to receive(:on).with( anything, /services\?level=critical/, anything).and_return(result)
+      subject.check_console_status_endpoint(unixhost)
+    end
+
     it 'yields false to repeat_fibonacci_style_for when conditions are not true' do
       allow(subject).to receive(:options).and_return({})
       allow(subject).to receive(:version_is_less).and_return(false)
