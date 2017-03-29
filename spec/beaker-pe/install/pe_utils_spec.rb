@@ -1293,16 +1293,10 @@ describe ClassMixedWithDSLInstallUtils do
       subject.simple_monolithic_install(monolithic, [el_agent, el_agent, deb_agent, deb_agent])
     end
 
-    it 'signs all certificates at once' do
+    it 'signs certificates then stops agents to avoid interference with tests' do
       agents = [el_agent, el_agent, deb_agent, deb_agent]
-      expect(subject).to receive(:sign_certificate_for).with(agents)
-
-      subject.simple_monolithic_install(monolithic, agents)
-    end
-
-    it 'stops the agents in parallel to avoid interference with tests' do
-      agents = [el_agent, el_agent, deb_agent, deb_agent]
-      expect(subject).to receive(:stop_agent_on).with([monolithic, *agents], :run_in_parallel => true)
+      expect(subject).to receive(:sign_certificate_for).with(agents).ordered
+      expect(subject).to receive(:stop_agent_on).with([monolithic, *agents], :run_in_parallel => true).ordered
 
       subject.simple_monolithic_install(monolithic, agents)
     end

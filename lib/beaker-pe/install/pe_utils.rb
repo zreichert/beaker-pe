@@ -471,13 +471,13 @@ module Beaker
             end
           end
 
-          step "Stop puppet agents to avoid interfering with tests" do
-            stop_agent_on(all_hosts, :run_in_parallel => true)
-          end
-
           step "Sign agent certificates" do
             # This will sign all cert requests
             sign_certificate_for(agents)
+          end
+
+          step "Stop puppet agents to avoid interfering with tests" do
+            stop_agent_on(all_hosts, :run_in_parallel => true)
           end
 
           step "Run puppet to setup mcollective and pxp-agent" do
