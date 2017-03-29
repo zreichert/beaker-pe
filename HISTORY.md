@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 23 Mar, 2017 (dd68cfa4)](#LATEST)
+* [LATEST - 29 Mar, 2017 (95b0e94f)](#LATEST)
+* [1.12.0 - 23 Mar, 2017 (0784adc6)](#1.12.0)
 * [1.11.0 - 23 Mar, 2017 (6c3b0067)](#1.11.0)
 * [1.10.0 - 20 Mar, 2017 (22e22ca8)](#1.10.0)
 * [1.9.1 - 22 Feb, 2017 (3b0bd457)](#1.9.1)
@@ -34,7 +35,34 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 23 Mar, 2017 (dd68cfa4)
+### <a name = "LATEST">LATEST - 29 Mar, 2017 (95b0e94f)
+
+* (GEM) update beaker-pe version to 1.12.1 (95b0e94f)
+
+* Merge pull request #65 from nicklewis/BKR-1085-sign-certs-before-stopping-agent (e1b6d137)
+
+
+```
+Merge pull request #65 from nicklewis/BKR-1085-sign-certs-before-stopping-agent
+
+(BKR-1085) Sign certs *before* stopping agent service
+```
+* (BKR-1085) Sign certs *before* stopping agent service (3b5208eb)
+
+
+```
+(BKR-1085) Sign certs *before* stopping agent service
+
+Previously, the simple_monolithic install method was installing agents,
+stopping the agent service and then attempting to sign certificates.
+This was failing sporadically because the agent service needs to run
+enough to submit a certificate request before being stopped. This was
+being handled properly in the generic install method, but the order of
+operations was swapped in the monolithic install method.
+```
+### <a name = "1.12.0">1.12.0 - 23 Mar, 2017 (0784adc6)
+
+* (HISTORY) update beaker-pe history for gem release 1.12.0 (0784adc6)
 
 * (GEM) update beaker-pe version to 1.12.0 (dd68cfa4)
 
