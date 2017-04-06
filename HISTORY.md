@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 29 Mar, 2017 (95b0e94f)](#LATEST)
+* [LATEST - 6 Apr, 2017 (197a55dd)](#LATEST)
+* [1.12.1 - 29 Mar, 2017 (fe8bbc82)](#1.12.1)
 * [1.12.0 - 23 Mar, 2017 (0784adc6)](#1.12.0)
 * [1.11.0 - 23 Mar, 2017 (6c3b0067)](#1.11.0)
 * [1.10.0 - 20 Mar, 2017 (22e22ca8)](#1.10.0)
@@ -35,7 +36,31 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 29 Mar, 2017 (95b0e94f)
+### <a name = "LATEST">LATEST - 6 Apr, 2017 (197a55dd)
+
+* (GEM) update beaker-pe version to 1.13.0 (197a55dd)
+
+* (BKR-806) Add tests for frictionless repo setup (5e723bb2)
+
+* (BKR-806) Only add pe_repo classes once (a718fbb9)
+
+
+```
+(BKR-806) Only add pe_repo classes once
+
+Previously, if installing multiple agents with the same platform, the
+work to add the appropriate pe_repo class to the master would be
+performed once for each agent. Because that requires running `puppet
+agent -t` on the master, it can add a significant amount of unnecessary
+overhead to the install process when installing several agents.
+
+We now check whether the class has already been included in the Beaker
+Frictionless Agent group and skip running puppet on the master if it
+has.
+```
+### <a name = "1.12.1">1.12.1 - 29 Mar, 2017 (fe8bbc82)
+
+* (HISTORY) update beaker-pe history for gem release 1.12.1 (fe8bbc82)
 
 * (GEM) update beaker-pe version to 1.12.1 (95b0e94f)
 
