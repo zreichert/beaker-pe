@@ -759,13 +759,16 @@ module Beaker
           Beaker::DSL::InstallUtils::FeatureFlags.new(opts).flag?(flag)
         end
 
+        # @deprecated the !version_is_less(host['pe_ver'], '3.99') can be removed once we no longer support pre 2015.2.0 PE versions
         # Check if windows host is able to frictionlessly install puppet
         # @param [Beaker::Host] host that we are checking if it is possible to install frictionlessly to
         # @return [Boolean] true if frictionless is supported and not affected by known bugs
         def install_via_msi?(host)
           #windows agents from 4.0 -> 2016.1.2 were only installable via the aio method
-          #powershell2 bug was fixed in PE 2016.4.3
-          (host['platform'] =~ /windows/ && (version_is_less(host['pe_ver'], '2016.4.0') && !version_is_less(host['pe_ver'], '3.99'))) || (host['platform'] =~ /windows-2008r2/ && (version_is_less(host['pe_ver'], '2016.4.3') && !version_is_less(host['pe_ver'], '3.99')))
+          #powershell2 bug was fixed in PE 2016.4.3, and PE 2017.1.0, but not 2016.5.z.
+          (host['platform'] =~ /windows/ && (version_is_less(host['pe_ver'], '2016.4.0') && !version_is_less(host['pe_ver'], '3.99'))) ||
+            (host['platform'] =~ /windows-2008r2/ && (version_is_less(host['pe_ver'], '2016.4.3') && !version_is_less(host['pe_ver'], '3.99'))) ||
+            (host['platform'] =~ /windows-2008r2/ && (!version_is_less(host['pe_ver'], '2016.4.99') && version_is_less(host['pe_ver'], '2016.5.99') && !version_is_less(host['pe_ver'], '3.99')))
         end
 
         # True if version is greater than or equal to MEEP_CLASSIFICATION_VERSION

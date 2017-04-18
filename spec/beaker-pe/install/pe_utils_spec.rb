@@ -285,6 +285,22 @@ describe ClassMixedWithDSLInstallUtils do
       expect(subject.install_via_msi?(the_host)).to eq(false)
     end
 
+    it 'returns true if pe_version is 2016.5.1 and platform is windows-2008r2 bug' do
+      the_host = winhost.dup
+      the_host['roles'] = ['frictionless']
+      the_host['platform'] = 'windows-2008r2'
+      the_host['pe_ver'] = '2016.5.1'
+      expect(subject.install_via_msi?(the_host)).to eq(true)
+    end
+
+    it 'returns false if pe_version is 2017.1.0 and platform is windows-2008r2 bug' do
+      the_host = winhost.dup
+      the_host['roles'] = ['frictionless']
+      the_host['platform'] = 'windows-2008r2'
+      the_host['pe_ver'] = '2017.1.0'
+      expect(subject.install_via_msi?(the_host)).to eq(false)
+    end
+
   end
 
   describe 'higgs installer' do
