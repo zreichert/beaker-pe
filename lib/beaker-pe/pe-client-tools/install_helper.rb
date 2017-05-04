@@ -17,14 +17,22 @@ module Beaker
           block_on hosts do |host|
             variant, version, arch, codename = host['platform'].to_array
             package_name = ''
+            # If we're installing a tagged version, then the package will be
+            # located in a directory named after the tag. Otherwise, look for
+            # it by SHA.
+            if opts[:pe_client_tools_version] =~ /^\d+(\.\d+)+$/
+              directory = opts[:pe_client_tools_version]
+            else
+              directory = opts[:pe_client_tools_sha]
+            end
             case host['platform']
               when /win/
                 package_name << product
-                release_path = "#{opts[:dev_builds_url]}/#{product}/#{ opts[:pe_client_tools_sha] }/artifacts/#{variant}"
+                release_path = "#{opts[:dev_builds_url]}/#{product}/#{directory}/artifacts/#{variant}"
                 package_name << "-#{opts[:pe_client_tools_version]}-x#{arch}.msi"
                 generic_install_msi_on(host, File.join(release_path, package_name), {}, {:debug => true})
               when /osx/
-                release_path = "#{opts[:dev_builds_url]}/#{product}/#{ opts[:pe_client_tools_sha] }/artifacts/apple/#{version}/#{opts[:puppet_collection]}/#{arch}"
+                release_path = "#{opts[:dev_builds_url]}/#{product}/#{directory}/artifacts/apple/#{version}/#{opts[:puppet_collection]}/#{arch}"
                 package_base = product.dup
                 package_base << "-#{opts[:pe_client_tools_version]}"
                 package_name = package_base.dup
@@ -36,7 +44,7 @@ module Beaker
                 scp_to host, File.join(copy_dir_local, package_name), host.external_copy_base
                 host.generic_install_dmg(package_name, package_base, installer)
               else
-                install_dev_repos_on(product, host, opts[:pe_client_tools_sha], '/tmp/repo_configs',{:dev_builds_url => opts[:dev_builds_url]})
+                install_dev_repos_on(product, host, directory, '/tmp/repo_configs',{:dev_builds_url => opts[:dev_builds_url]})
                 host.install_package('pe-client-tools')
             end
           end
