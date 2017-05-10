@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 6 Apr, 2017 (197a55dd)](#LATEST)
+* [LATEST - 10 May, 2017 (588c5ca5)](#LATEST)
+* [1.13.0 - 6 Apr, 2017 (a3c5d641)](#1.13.0)
 * [1.12.1 - 29 Mar, 2017 (fe8bbc82)](#1.12.1)
 * [1.12.0 - 23 Mar, 2017 (0784adc6)](#1.12.0)
 * [1.11.0 - 23 Mar, 2017 (6c3b0067)](#1.11.0)
@@ -36,7 +37,85 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 6 Apr, 2017 (197a55dd)
+### <a name = "LATEST">LATEST - 10 May, 2017 (588c5ca5)
+
+* (GEM) update beaker-pe version to 1.14.0 (588c5ca5)
+
+* Merge pull request #69 from nicklewis/properly-install-pe-client-tools-from-tag (e162d8ed)
+
+
+```
+Merge pull request #69 from nicklewis/properly-install-pe-client-tools-from-tag
+
+(maint) Properly install pe-client-tools when using a tag version
+```
+* (maint) Properly install pe-client-tools when using a tag version (8b8e5366)
+
+
+```
+(maint) Properly install pe-client-tools when using a tag version
+
+Previously, installing pe-client-tools with a tag version would fail on
+Windows/OS X and install the wrong package on Linux.
+
+When installing pe-client-tools, we provide two options:
+- pe_client_tools_sha: the commit SHA of the version to install
+- pe_client_tools_version: the `git describe` of the version to install
+
+pe_client_tools_version is always the name of the package to install.
+But the *location* of the package differs based on whether the package
+version corresponds to a tag or not. When the package isn't a tag
+version, it's located in a directory named based on the SHA. But when it
+is a tag version, it's located in a directory named after the tag.
+
+When pe_client_tools_version was specified as a tag, we would look in
+the directory named after the SHA (which was actually from a *previous*
+build of the package, from before it was tagged) for a file named after
+the tag. That file would never be there, since we had a mismatch of
+directory and filename. For Windows and OS X, this caused a failure to
+install, because they need to know the exact filename.
+
+This case incidentally *worked* (or appeared to work) on Linux
+platforms, because they never actually refer to the package by
+filename. Instead, they install the package by setting up a repo config,
+which *is* always named after pe_client_tools_sha, and never
+pe_client_tools_version. In that case, the Linux platforms would
+actually install the previous version of the package by SHA, from before
+it had been tagged.
+
+We now properly handle the case where pe_client_tools_version is a tag,
+by using that version as the location of the file in addition to the
+filename.
+```
+* Merge pull request #66 from cthorn42/main/master/PE-20086_msi_install_method_for_2016.5.(0|1)_if_windows2008r2 (a77cf5bf)
+
+
+```
+Merge pull request #66 from cthorn42/main/master/PE-20086_msi_install_method_for_2016.5.(0|1)_if_windows2008r2
+
+(PE-20086) PE 2016.5.(0|1) should install via msi method if windows2008r2
+```
+* (PE-20086) PE 2016.5.(0|1) should install via msi method for windows2008r2 (738e6f52)
+
+
+```
+(PE-20086) PE 2016.5.(0|1) should install via msi method for windows2008r2
+
+Due to the timing of our LTS releases and our new major branches, PE 2016.5.0 and
+PE 2016.5.1 did not get the windows2008r2 powershell fix that was done in PE-18351.
+This means we need to not attempt to install fricitonlessly if it is pe 2016.5.(0|1)
+if the agent platform is windows2008r2.
+This PR adjust the install_via_msi? method and refactors the logic in there to clean
+it up a bit (it is getting tough to easily read).
+It breaks the method down to three lines:
+1. If the agent is older then PE 2016.4.0.
+2. If the agent is windows2008r2 and is less then 2016.4.3
+3. If the agent is windows2008r2 and the agent version is between 2016.4.99 and 2016.5.99.
+If any of those are true then the MSI method should be used to install the agent.
+```
+### <a name = "1.13.0">1.13.0 - 6 Apr, 2017 (a3c5d641)
+
+* (HISTORY) update beaker-pe history for gem release 1.13.0 (a3c5d641)
 
 * (GEM) update beaker-pe version to 1.13.0 (197a55dd)
 
