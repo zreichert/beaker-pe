@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 10 May, 2017 (588c5ca5)](#LATEST)
+* [LATEST - 11 May, 2017 (6cdb9055)](#LATEST)
+* [1.14.0 - 10 May, 2017 (874a7998)](#1.14.0)
 * [1.13.0 - 6 Apr, 2017 (a3c5d641)](#1.13.0)
 * [1.12.1 - 29 Mar, 2017 (fe8bbc82)](#1.12.1)
 * [1.12.0 - 23 Mar, 2017 (0784adc6)](#1.12.0)
@@ -37,7 +38,25 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 10 May, 2017 (588c5ca5)
+### <a name = "LATEST">LATEST - 11 May, 2017 (6cdb9055)
+
+* (GEM) update beaker-pe version to 1.15.0 (6cdb9055)
+
+* (PE-20405) On frictionless installs ensure all hosts run prepare_hosts (f9cb3ca8)
+
+
+```
+(PE-20405) On frictionless installs ensure all hosts run prepare_hosts
+
+Previously when there was a frictionless install prepare_hosts was
+only set on the master. This meant that agents were skipped and as
+a result agents did not have a working_dir set.
+This caused unix machines to install on just the root directory and
+caused failures on windows.
+```
+### <a name = "1.14.0">1.14.0 - 10 May, 2017 (874a7998)
+
+* (HISTORY) update beaker-pe history for gem release 1.14.0 (874a7998)
 
 * (GEM) update beaker-pe version to 1.14.0 (588c5ca5)
 
