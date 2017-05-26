@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 11 May, 2017 (6cdb9055)](#LATEST)
+* [LATEST - 26 May, 2017 (053b1ab7)](#LATEST)
+* [1.15.0 - 11 May, 2017 (0fddaad5)](#1.15.0)
 * [1.14.0 - 10 May, 2017 (874a7998)](#1.14.0)
 * [1.13.0 - 6 Apr, 2017 (a3c5d641)](#1.13.0)
 * [1.12.1 - 29 Mar, 2017 (fe8bbc82)](#1.12.1)
@@ -38,7 +39,38 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 11 May, 2017 (6cdb9055)
+### <a name = "LATEST">LATEST - 26 May, 2017 (053b1ab7)
+
+* (GEM) update beaker-pe version to 1.16.0 (053b1ab7)
+
+* PE-20610 Fix install failure on windows for old pe versions (6c5c6143)
+
+
+```
+PE-20610 Fix install failure on windows for old pe versions
+
+Added logic to use the old generic_install method on windows when
+installing old pe versions that requires an msi install because of
+powershell2 issue PE-18351. The newly added simple_monolithic_install
+does not have a check for those conditions and proceeds with
+frictionless installation on those hosts which fails.
+```
+* (PE-20589) After a simple monolithic install run puppet on non-infrastructure agents (d69499ee)
+
+
+```
+(PE-20589) After a simple monolithic install run puppet on non-infrastructure agents
+
+Previously after agents were installed via simple mono install, we ran the agents
+all at once. This include the master. Occasionaly there would be a change done to
+the console services that would require a restart.
+This would cause other agent runs to fail. So to not have that happen, we will run
+only the non-infrastructure agents. That should be fine since part of the process
+of installing PE should have the puppet runs included there.
+```
+### <a name = "1.15.0">1.15.0 - 11 May, 2017 (0fddaad5)
+
+* (HISTORY) update beaker-pe history for gem release 1.15.0 (0fddaad5)
 
 * (GEM) update beaker-pe version to 1.15.0 (6cdb9055)
 
