@@ -1357,14 +1357,13 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'installs on the master then on the agents' do
       expect(subject).to receive(:on).with(monolithic, "install master").ordered
-      expect(subject).to receive(:on).with([el_agent, el_agent], "install el agent", anything()).ordered
+      expect(subject).to receive(:block_on).with([el_agent, el_agent], :run_in_parallel => true).ordered
 
       subject.simple_monolithic_install(monolithic, [el_agent, el_agent])
     end
 
-    it 'installs agents in parallel if their install command is the same' do
-      expect(subject).to receive(:on).with([el_agent, el_agent], "install el agent", :run_in_parallel => true)
-      expect(subject).to receive(:on).with([deb_agent, deb_agent], "install deb agent", :run_in_parallel => true)
+    it 'installs agents in parallel' do
+      expect(subject).to receive(:block_on).with([el_agent, el_agent, deb_agent, deb_agent], :run_in_parallel => true)
 
       subject.simple_monolithic_install(monolithic, [el_agent, el_agent, deb_agent, deb_agent])
     end
