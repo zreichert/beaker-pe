@@ -485,6 +485,7 @@ module Beaker
           end
 
           step "Run puppet to setup mcollective and pxp-agent" do
+            on(master, puppet_agent('-t'), :acceptable_exit_codes => [0,2])
             run_puppet_on_non_infrastructure_nodes(all_hosts)
 
             #Workaround for windows frictionless install, see BKR-943 for the reason
