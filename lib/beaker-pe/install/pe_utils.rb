@@ -470,8 +470,8 @@ module Beaker
           end
 
           step "Install agents" do
-            agents.group_by {|agent| installer_cmd(agent, opts)}.each do |cmd, agents|
-              on agents, cmd, :run_in_parallel => true
+            block_on(agents, {:run_in_parallel => true}) do |host|
+              on(host, installer_cmd(host, opts))
             end
           end
 
