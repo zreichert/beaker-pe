@@ -1,6 +1,7 @@
 # worker - History
 ## Tags
-* [LATEST - 26 May, 2017 (053b1ab7)](#LATEST)
+* [LATEST - 7 Jun, 2017 (544c8585)](#LATEST)
+* [1.16.0 - 26 May, 2017 (f8218db6)](#1.16.0)
 * [1.15.0 - 11 May, 2017 (0fddaad5)](#1.15.0)
 * [1.14.0 - 10 May, 2017 (874a7998)](#1.14.0)
 * [1.13.0 - 6 Apr, 2017 (a3c5d641)](#1.13.0)
@@ -39,7 +40,57 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 26 May, 2017 (053b1ab7)
+### <a name = "LATEST">LATEST - 7 Jun, 2017 (544c8585)
+
+* (GEM) update beaker-pe version to 1.17.0 (544c8585)
+
+* Merge pull request #74 from ericwilliamson/bug/master/qeng-5040-run-puppet-after-mono-install (6958c093)
+
+
+```
+Merge pull request #74 from ericwilliamson/bug/master/qeng-5040-run-puppet-after-mono-install
+
+(QENG-5040) Run puppet after simplified mono install
+```
+* Merge pull request #73 from samwoods1/maint (cf2ad914)
+
+
+```
+Merge pull request #73 from samwoods1/maint
+
+(maint) Fix parallel agent install
+```
+* (QENG-5040) Run puppet after simplified mono install (01b9617d)
+
+
+```
+(QENG-5040) Run puppet after simplified mono install
+
+Previous to this commit, the new simplified mono install method was not
+running puppet on the master node in a mono only scenario. If the
+install included agents not of the masters OS, then puppet would of been
+ran due to needing to add pe_repo classes. In the scenario of mono
+master only, if puppet is not ran, then setup is not considered complete
+due to exported resources, mcollective and facts not being setup yet.
+This would cause numerous issues, such as no facts in puppetdb (so
+anyaltic tests for example would fail) until a test somewhere in the
+pipeline ran puppet agent on the master node.
+This commit adds a call outside of the parallel agent run on non infra
+agents due to the fact that with exported resources, the classifier
+service will restart, so need to run the master first, then after that
+all the agents can run.
+```
+* (maint) Fix parallel agent install (19c1e64a)
+
+
+```
+(maint) Fix parallel agent install
+Parallel agent installs have been broken since f9cb3ca802ddc94a9a42dcbcfef96f7a76a19dff because the install command contained a working_dir that was unique per host.
+This fixes that issue and also allows all agents to be installed in parallel regardless of OS or unique installer_cmd
+```
+### <a name = "1.16.0">1.16.0 - 26 May, 2017 (f8218db6)
+
+* (HISTORY) update beaker-pe history for gem release 1.16.0 (f8218db6)
 
 * (GEM) update beaker-pe version to 1.16.0 (053b1ab7)
 
