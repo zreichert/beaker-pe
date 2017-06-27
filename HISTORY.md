@@ -1,6 +1,6 @@
 # worker - History
 ## Tags
-* [LATEST - 7 Jun, 2017 (544c8585)](#LATEST)
+* [LATEST - 27 Jun, 2017 (25db20df)](#LATEST)
 * [1.16.0 - 26 May, 2017 (f8218db6)](#1.16.0)
 * [1.15.0 - 11 May, 2017 (0fddaad5)](#1.15.0)
 * [1.14.0 - 10 May, 2017 (874a7998)](#1.14.0)
@@ -40,7 +40,36 @@
 * [0.1.0 - 29 Feb, 2016 (4fc88d8c)](#0.1.0)
 
 ## Details
-### <a name = "LATEST">LATEST - 7 Jun, 2017 (544c8585)
+### <a name = "LATEST">LATEST - 27 Jun, 2017 (25db20df)
+
+* (GEM) update beaker-pe version to 1.18.0 (25db20df)
+
+* Merge pull request #75 from ericwilliamson/task/master/QENG-5095-frictionless-agent-use-current (d0924c94)
+
+
+```
+Merge pull request #75 from ericwilliamson/task/master/QENG-5095-frictionless-agent-use-current
+
+(QENG-5095) Use `current` endpoint for frictionless agent
+```
+* (QENG-5095) Use `current` endpoint for frictionless agent (416efbf5)
+
+
+```
+(QENG-5095) Use `current` endpoint for frictionless agent
+
+Previous to this commit, the url constructed for frictionless agent
+installs attempted to use the hosts `pe_ver` variable for getting the
+exact URL of the simplified install script. This was causing issues with
+PEZ builds due to the different pe_ver in the filename (for downloading
+the tarball) and the actual pe version.
+This commit updates the url to just use the `current` endpoint instead
+of the version, which mimics our install documentation. This won't
+really remove the ability of installing an older version via this method
+considering the logic for adding pe_repo classes didn't support passing
+a specific pe_ver / agent version to pe_repo.
+```
+* (HISTORY) update beaker-pe history for gem release 1.17.0 (38b5acd9)
 
 * (GEM) update beaker-pe version to 1.17.0 (544c8585)
 
