@@ -494,6 +494,10 @@ module Beaker
               on(agent, puppet("resource file \"#{client_datadir}\" ensure=absent force=true"))
             end
           end
+
+          step "Run puppet a second time on the primary to populate services.conf (PE-19054)" do
+            on(master, puppet_agent('-t'), :acceptable_exit_codes => [0,2])
+          end
         end
 
         def generic_install hosts, opts = {}
