@@ -110,7 +110,7 @@ module Beaker
 
             pe_debug = host[:pe_debug] || opts[:pe_debug] ? ' -x' : ''
             if host['platform'] =~ /windows/ then
-              "powershell -c \"cd #{host['working_dir']};[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/#{version}/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}\""
+              "powershell -c \"cd #{host['working_dir']};[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}\""
             elsif host['platform'] =~ /aix/ then
               curl_opts = '--tlsv1 -O'
               "cd #{host['working_dir']} && curl #{curl_opts} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
