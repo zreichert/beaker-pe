@@ -978,7 +978,7 @@ describe ClassMixedWithDSLInstallUtils do
     let(:node_group) { {} }
 
     before :each do
-      allow(subject).to receive(:on)
+      allow(subject).to receive(:retry_on)
 
       allow(subject).to receive(:hosts).and_return([master, agent])
       allow(Scooter::HttpDispatchers::ConsoleDispatcher).to receive(:new).and_return(dispatcher)
