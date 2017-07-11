@@ -345,7 +345,16 @@ module Beaker
               node_group['classes'][klass] = {}
 
               _console_dispatcher.create_new_node_group_model(node_group)
-              on master, puppet("agent -t"), :acceptable_exit_codes => [0,2]
+              # The puppet agent run that will download the agent tarballs to the master can sometimes fail with
+              # curl errors if there is a network hiccup. Use beakers `retry_on` method to retry up to
+              # three times to avoid failing the entire test pipeline due to a network blip
+              retry_opts = {
+                :desired_exit_codes => [0,2],
+                :max_retries => 3,
+                # Beakers retry_on method wants the verbose value to be a string, not a bool.
+                :verbose => 'true'
+              }
+              retry_on(master, puppet("agent -t"), retry_opts)
             end
           end
         end
