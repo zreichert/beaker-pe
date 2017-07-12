@@ -188,6 +188,62 @@ describe ClassMixedWithDSLInstallUtils do
     end
   end
 
+  describe 'frictionless_agent_installer_cmd' do
+    let(:host) do
+      the_host = unixhost.dup
+      the_host['roles'] = ['frictionless']
+      the_host
+    end
+
+    before(:each) do
+      expect( subject ).to receive( :master ).and_return( 'testmaster' )
+    end
+
+    it 'generates a unix PE frictionless install command without cert verification' do
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash")
+    end
+
+    it 'generates a unix PE frictionless install command with cert verification' do
+      host['use_puppet_ca_cert'] = true
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem https://testmaster:8140/packages/current/install.bash && bash install.bash")
+    end
+
+    it 'generates a unix PE frictionless install command without cert verification on aix' do
+      host['platform'] = 'aix-61-power'
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O https://testmaster:8140/packages/current/install.bash && bash install.bash")
+    end
+
+    it 'generates a PS1 frictionless install command for windows' do
+      host['platform'] = 'windows-2012-64'
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq(%q{powershell -c "cd /tmp;[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://testmaster:8140/packages/current/install.ps1', '/tmp/install.ps1');/tmp/install.ps1 -verbose "})
+    end
+  end
+
+  describe 'install_ca_cert_on' do
+    let(:host) do
+      the_host = unixhost.dup
+      the_host['roles'] = ['frictionless']
+      the_host
+    end
+
+    before(:each) do
+      allow( subject ).to receive( :master ).and_return( 'testmaster' )
+    end
+
+    it 'installs ca.pem if use_puppet_ca_cert is true' do
+      host['use_puppet_ca_cert'] = true
+      expect(Dir).to receive(:mktmpdir).with('master_ca_cert').and_return('/tmp/master_ca_cert_random')
+      expect(subject).to receive(:on).with(host, 'mkdir -p /etc/puppetlabs/puppet/ssl/certs')
+      expect(subject).to receive(:scp_from).with('testmaster', '/etc/puppetlabs/puppet/ssl/certs/ca.pem', %r{/tmp/master_ca_cert_random})
+      expect(subject).to receive(:scp_to).with(host, %r{/tmp/master_ca_cert_random/ca.pem}, '/etc/puppetlabs/puppet/ssl/certs')
+      expect( subject.install_ca_cert_on(host, {}) )
+    end
+
+    it 'does nothing if use_puppet_ca_cert is false' do
+      expect( subject.install_ca_cert_on(host, {}) ).to be_nil
+    end
+  end
+
   describe 'installer_cmd' do
 
     it 'generates a unix PE install command for a unix host' do
@@ -203,7 +259,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/current/install.bash && bash install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash"
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless" and "frictionless_options"' do
@@ -213,7 +269,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host['frictionless_options'] = { 'main' => { 'dns_alt_names' => 'puppet' } }
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/current/install.bash && bash install.bash main:dns_alt_names=puppet"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash main:dns_alt_names=puppet"
     end
 
     it 'generates a osx PE install command for a osx host' do
@@ -250,7 +306,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host[:pe_debug] = true
-      expect( subject.installer_cmd( the_host, {} ) ).to be === "cd /tmp && curl --tlsv1 -kO https://testmaster:8140/packages/current/install.bash && bash -x install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be === "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash -x install.bash"
     end
   end
 

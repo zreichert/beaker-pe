@@ -81,6 +81,68 @@ module Beaker
           special_nodes + real_agents
         end
 
+        # If host or opts has the :use_puppet_ca_cert flag set, then push the master's
+        # ca cert onto the given host at /etc/puppetlabs/puppet/ssl/certs/ca.pem.
+        #
+        # This in turn allows +frictionless_agent_installer_cmd+ to generate
+        # an install which references the cert to verify the master when downloading
+        # resources.
+        def install_ca_cert_on(host, opts)
+          if host[:use_puppet_ca_cert] || opts[:use_puppet_ca_cert]
+            @cert_cache_dir ||= Dir.mktmpdir("master_ca_cert")
+            local_cert_copy = "#{@cert_cache_dir}/ca.pem"
+            step "Copying master ca.pem to agent for secure frictionless install" do
+              ca_pem_dir = '/etc/puppetlabs/puppet/ssl/certs'
+              ca_pem_path = "#{ca_pem_dir}/ca.pem"
+              scp_from(master, ca_pem_path , @cert_cache_dir) unless File.exist?(local_cert_copy)
+              on(host, "mkdir -p #{ca_pem_dir}")
+              scp_to(host, local_cert_copy, ca_pem_dir)
+            end
+          end
+        end
+
+        # Generate the command line string needed to from a frictionless puppet-agent
+        # install on this host in a PE environment.
+        #
+        # @param [Host] host The host to install puppet-agent onto
+        # @param [Hash] opts The full beaker options
+        # @option opts [Boolean] :use_puppet_ca_cert (false) if true the
+        #   command will reference the local puppet ca cert to verify the master
+        #   when obtaining the installation script
+        # @param [String] pe_version The PE version string for capabilities testing
+        # @return [String] of the commands to be executed for the install
+        def frictionless_agent_installer_cmd(host, opts, pe_version)
+          # PE 3.4 introduced the ability to pass in config options to the bash
+          # script in the form of <section>:<key>=<value>
+          frictionless_install_opts = []
+          if host.has_key?('frictionless_options') and !  version_is_less(pe_version, '3.4.0')
+            # since we have options to pass in, we need to tell the bash script
+            host['frictionless_options'].each do |section, settings|
+              settings.each do |key, value|
+                frictionless_install_opts << "#{section}:#{key}=#{value}"
+              end
+            end
+          end
+
+          pe_debug = host[:pe_debug] || opts[:pe_debug] ? ' -x' : ''
+          use_puppet_ca_cert = host[:use_puppet_ca_cert] || opts[:use_puppet_ca_cert]
+
+          if host['platform'] =~ /windows/ then
+            cmd = %Q{powershell -c "cd #{host['working_dir']};[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}"}
+          else
+            curl_opts = %w{--tlsv1 -O}
+            if use_puppet_ca_cert
+              curl_opts << '--cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem'
+            elsif host['platform'] !~ /aix/
+              curl_opts << '-k'
+            end
+
+            cmd = "export FRICTIONLESS_TRACE=true; cd #{host['working_dir']} && curl #{curl_opts.join(' ')} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
+          end
+
+          return cmd
+        end
+
         #Create the PE install command string based upon the host and options settings
         # @param [Host] host The host that PE is to be installed on
         #                    For UNIX machines using the full PE installer, the host object must have the 'pe_installer' field set correctly.
@@ -96,28 +158,7 @@ module Beaker
           # Frictionless install didn't exist pre-3.2.0, so in that case we fall
           # through and do a regular install.
           if host['roles'].include? 'frictionless' and ! version_is_less(version, '3.2.0')
-            # PE 3.4 introduced the ability to pass in config options to the bash script in the form
-            # of <section>:<key>=<value>
-            frictionless_install_opts = []
-            if host.has_key?('frictionless_options') and !  version_is_less(version, '3.4.0')
-              # since we have options to pass in, we need to tell the bash script
-              host['frictionless_options'].each do |section, settings|
-                settings.each do |key, value|
-                  frictionless_install_opts << "#{section}:#{key}=#{value}"
-                end
-              end
-            end
-
-            pe_debug = host[:pe_debug] || opts[:pe_debug] ? ' -x' : ''
-            if host['platform'] =~ /windows/ then
-              "powershell -c \"cd #{host['working_dir']};[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}\""
-            elsif host['platform'] =~ /aix/ then
-              curl_opts = '--tlsv1 -O'
-              "cd #{host['working_dir']} && curl #{curl_opts} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
-            else
-              curl_opts = '--tlsv1 -kO'
-              "cd #{host['working_dir']} && curl #{curl_opts} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
-            end
+            frictionless_agent_installer_cmd(host, opts, version)
           elsif host['platform'] =~ /osx/
             version = host['pe_ver'] || opts[:pe_ver]
             pe_debug = host[:pe_debug] || opts[:pe_debug] ? ' -verboseR' : ''
@@ -295,7 +336,7 @@ module Beaker
           end
         end
 
-        #Classify the master so that it can deploy frictionless packages for a given host. 
+        #Classify the master so that it can deploy frictionless packages for a given host.
         #This function does nothing when using meep for classification.
         # @param [Host] host The host to install pacakges for
         # @api private
@@ -480,6 +521,7 @@ module Beaker
 
           step "Install agents" do
             block_on(agents, {:run_in_parallel => true}) do |host|
+              install_ca_cert_on(host, opts)
               on(host, installer_cmd(host, opts))
             end
           end
@@ -580,6 +622,7 @@ module Beaker
                 if host['platform'] != master['platform'] # only need to do this if platform differs
                   deploy_frictionless_to_master(host)
                 end
+                install_ca_cert_on(host, opts)
                 on host, installer_cmd(host, opts)
                 configure_type_defaults_on(host)
               elsif host['platform'] =~ /osx|eos/
