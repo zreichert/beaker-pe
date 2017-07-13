@@ -507,7 +507,9 @@ module Beaker
           fetch_pe([master], opts)
           prepare_host_installer_options(master)
           generate_installer_conf_file_for(master, [master], opts)
-          on master, installer_cmd(master, opts)
+          step "Install PE on master" do
+            on master, installer_cmd(master, opts)
+          end
 
           step "Setup frictionless installer on the master" do
             agents.each do |agent|
