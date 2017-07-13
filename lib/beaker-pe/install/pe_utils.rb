@@ -137,7 +137,7 @@ module Beaker
               curl_opts << '-k'
             end
 
-            cmd = "export FRICTIONLESS_TRACE=true; cd #{host['working_dir']} && curl #{curl_opts.join(' ')} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
+            cmd = "FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd #{host['working_dir']} && curl #{curl_opts.join(' ')} https://#{master}:8140/packages/current/install.bash && bash#{pe_debug} install.bash #{frictionless_install_opts.join(' ')}".strip
           end
 
           return cmd
