@@ -2,6 +2,7 @@ require 'spec_helper'
 
 class ClassPEClientToolsMixedWithPatterns
   include Beaker::DSL::InstallUtils::PEClientTools
+  include Beaker::DSL::Helpers::HostHelpers
   include Beaker::DSL::Patterns
 end
 
