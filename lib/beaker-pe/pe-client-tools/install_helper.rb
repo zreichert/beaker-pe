@@ -98,6 +98,7 @@ module Beaker
               )
 
               scp_to host, list, '/etc/apt/sources.list.d'
+              create_remote_file(host, "/etc/apt/apt.conf.d/99trust-all", 'APT::Get::AllowUnauthenticated "true";')
               on host, 'apt-get update'
             else
               host.logger.notify("No repository installation step for #{platform} yet...")

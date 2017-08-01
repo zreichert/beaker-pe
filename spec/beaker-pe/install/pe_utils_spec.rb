@@ -200,17 +200,17 @@ describe ClassMixedWithDSLInstallUtils do
     end
 
     it 'generates a unix PE frictionless install command without cert verification' do
-      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash")
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash")
     end
 
     it 'generates a unix PE frictionless install command with cert verification' do
       host['use_puppet_ca_cert'] = true
-      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem https://testmaster:8140/packages/current/install.bash && bash install.bash")
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem https://testmaster:8140/packages/current/install.bash && bash install.bash")
     end
 
     it 'generates a unix PE frictionless install command without cert verification on aix' do
       host['platform'] = 'aix-61-power'
-      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O https://testmaster:8140/packages/current/install.bash && bash install.bash")
+      expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq("FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O https://testmaster:8140/packages/current/install.bash && bash install.bash")
     end
 
     it 'generates a PS1 frictionless install command for windows' do
@@ -259,7 +259,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_ver'] = '3.8.0'
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash"
     end
 
     it 'generates a unix PE frictionless install command for a unix host with role "frictionless" and "frictionless_options"' do
@@ -269,7 +269,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host['frictionless_options'] = { 'main' => { 'dns_alt_names' => 'puppet' } }
-      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash main:dns_alt_names=puppet"
+      expect( subject.installer_cmd( the_host, {} ) ).to be ===  "FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash install.bash main:dns_alt_names=puppet"
     end
 
     it 'generates a osx PE install command for a osx host' do
@@ -306,7 +306,7 @@ describe ClassMixedWithDSLInstallUtils do
       the_host['pe_installer'] = 'puppet-enterprise-installer'
       the_host['roles'] = ['frictionless']
       the_host[:pe_debug] = true
-      expect( subject.installer_cmd( the_host, {} ) ).to be === "export FRICTIONLESS_TRACE=true; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash -x install.bash"
+      expect( subject.installer_cmd( the_host, {} ) ).to be === "FRICTIONLESS_TRACE='true'; export FRICTIONLESS_TRACE; cd /tmp && curl --tlsv1 -O -k https://testmaster:8140/packages/current/install.bash && bash -x install.bash"
     end
   end
 
