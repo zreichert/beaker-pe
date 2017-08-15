@@ -92,11 +92,11 @@ module Beaker
             @cert_cache_dir ||= Dir.mktmpdir("master_ca_cert")
             local_cert_copy = "#{@cert_cache_dir}/ca.pem"
             step "Copying master ca.pem to agent for secure frictionless install" do
-              ca_pem_dir = '/etc/puppetlabs/puppet/ssl/certs'
-              ca_pem_path = "#{ca_pem_dir}/ca.pem"
-              scp_from(master, ca_pem_path , @cert_cache_dir) unless File.exist?(local_cert_copy)
+              agent_ca_pem_dir = "#{host['puppetpath']}/ssl/certs"
+              master_ca_pem_path = "/etc/puppetlabs/puppet/ssl/certs/ca.pem"
+              scp_from(master, master_ca_pem_path , @cert_cache_dir) unless File.exist?(local_cert_copy)
               on(host, "mkdir -p #{ca_pem_dir}")
-              scp_to(host, local_cert_copy, ca_pem_dir)
+              scp_to(host, local_cert_copy, agent_ca_pem_dir)
             end
           end
         end
@@ -128,7 +128,14 @@ module Beaker
           use_puppet_ca_cert = host[:use_puppet_ca_cert] || opts[:use_puppet_ca_cert]
 
           if host['platform'] =~ /windows/ then
-            cmd = %Q{powershell -c "cd #{host['working_dir']};[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}"}
+            if use_puppet_ca_cert
+              frictionless_install_opts << '-UsePuppetCA'
+              cert_validator = %Q{\\$callback = {param(\\$sender,[System.Security.Cryptography.X509Certificates.X509Certificate]\\$certificate,[System.Security.Cryptography.X509Certificates.X509Chain]\\$chain,[System.Net.Security.SslPolicyErrors]\\$sslPolicyErrors);\\$CertificateType=[System.Security.Cryptography.X509Certificates.X509Certificate2];\\$CACert=\\$CertificateType::CreateFromCertFile('#{host['puppetpath']}/ssl/certs/ca.pem') -as \\$CertificateType;\\$chain.ChainPolicy.ExtraStore.Add(\\$CACert);return \\$chain.Build(\\$certificate)};[Net.ServicePointManager]::ServerCertificateValidationCallback = \\$callback}
+            else
+              cert_validator = '[Net.ServicePointManager]::ServerCertificateValidationCallback = {\\$true}'
+            end
+
+            cmd = %Q{powershell -c "cd #{host['working_dir']};#{cert_validator};\\$webClient = New-Object System.Net.WebClient;\\$webClient.DownloadFile('https://#{master}:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1');#{host['working_dir']}/install.ps1 -verbose #{frictionless_install_opts.join(' ')}"}
           else
             curl_opts = %w{--tlsv1 -O}
             if use_puppet_ca_cert
