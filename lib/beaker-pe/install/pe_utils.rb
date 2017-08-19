@@ -95,7 +95,7 @@ module Beaker
               agent_ca_pem_dir = "#{host['puppetpath']}/ssl/certs"
               master_ca_pem_path = "/etc/puppetlabs/puppet/ssl/certs/ca.pem"
               scp_from(master, master_ca_pem_path , @cert_cache_dir) unless File.exist?(local_cert_copy)
-              on(host, "mkdir -p #{ca_pem_dir}")
+              on(host, "mkdir -p #{agent_ca_pem_dir}")
               scp_to(host, local_cert_copy, agent_ca_pem_dir)
             end
           end

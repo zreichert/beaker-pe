@@ -247,22 +247,22 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'generates a PS1 frictionless install command for windows' do
       host['platform'] = 'windows-2012-64'
+      host['puppetpath'] = '/PuppetLabs/puppet/etc'
       host['use_puppet_ca_cert'] = true
       expecting = "powershell -c \"" +
       [
         "cd /tmp",
-        "$callback = {param($sender,[System.Security.Cryptography.X509Certificates.X509Certificate]$certificate,[System.Security.Cryptography.X509Certificates.X509Chain]$chain,[System.Net.Security.SslPolicyErrors]$sslPolicyErrors)",
-        "$CertificateType=[System.Security.Cryptography.X509Certificates.X509Certificate2]",
-        "$CACert=$CertificateType::CreateFromCertFile('C:\\ProgramData\\PuppetLabs\\puppet\\etc\\ssl\\certs\\ca_cert.pem') -as $CertificateType",
-        "$chain.ChainPolicy.ExtraStore.Add($CACert)",
-        "return $chain.Build($certificate)}",
-        "[Net.ServicePointManager]::ServerCertificateValidationCallback = $callback",
+        "\\$callback = {param(\\$sender,[System.Security.Cryptography.X509Certificates.X509Certificate]\\$certificate,[System.Security.Cryptography.X509Certificates.X509Chain]\\$chain,[System.Net.Security.SslPolicyErrors]\\$sslPolicyErrors)",
+        "\\$CertificateType=[System.Security.Cryptography.X509Certificates.X509Certificate2]",
+        "\\$CACert=\\$CertificateType::CreateFromCertFile('/PuppetLabs/puppet/etc/ssl/certs/ca.pem') -as \\$CertificateType",
+        "\\$chain.ChainPolicy.ExtraStore.Add(\\$CACert)",
+        "return \\$chain.Build(\\$certificate)}",
+        "[Net.ServicePointManager]::ServerCertificateValidationCallback = \\$callback",
         "\\$webClient = New-Object System.Net.WebClient",
         "\\$webClient.DownloadFile('https://testmaster:8140/packages/current/install.ps1', '#{host['working_dir']}/install.ps1')",
         "/tmp/install.ps1 -verbose -UsePuppetCA"
       ].join(";") +
       "\""
-
       expect( subject.frictionless_agent_installer_cmd( host, {}, '2016.4.0' ) ).to eq(expecting)
     end
   end
@@ -280,6 +280,7 @@ describe ClassMixedWithDSLInstallUtils do
 
     it 'installs ca.pem if use_puppet_ca_cert is true' do
       host['use_puppet_ca_cert'] = true
+      host['puppetpath'] = '/etc/puppetlabs/puppet'
       expect(Dir).to receive(:mktmpdir).with('master_ca_cert').and_return('/tmp/master_ca_cert_random')
       expect(subject).to receive(:on).with(host, 'mkdir -p /etc/puppetlabs/puppet/ssl/certs')
       expect(subject).to receive(:scp_from).with('testmaster', '/etc/puppetlabs/puppet/ssl/certs/ca.pem', %r{/tmp/master_ca_cert_random})
