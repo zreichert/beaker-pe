@@ -37,6 +37,11 @@ things:
 2. put a `require 'beaker-pe'` statement in your tests/code that need
   beaker-pe-specific functionality
 
+# Gem Installing
+Spec tests require a version of scooter that is private. Execute
+`export GEM_SOURCE=http://rubygems.delivery.puppetlabs.net` prior to running
+`bundle install --path .bundle/gems/`.
+
 # Spec Testing
 
 Spec tests all live under the `spec` folder.  These are the default rake task, &
